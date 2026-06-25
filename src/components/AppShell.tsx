@@ -23,6 +23,7 @@ import { useState, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ChatbotWidget } from "@/components/ChatbotWidget";
 
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -42,15 +43,22 @@ const NAV = [
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
   const router = useRouter();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [open, setOpen] = useState(false);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen grid place-items-center">
+        <div className="size-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
   if (!user) {
-    // Soft-guard: redirect to /auth
     if (typeof window !== "undefined") {
-      router.navigate({ to: "/auth" });
+      router.navigate({ to: "/auth", search: { tab: "login" } });
     }
     return null;
   }
@@ -99,7 +107,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <p className="text-sm font-semibold truncate">{user.fullName}</p>
               <p className="text-xs text-muted-foreground truncate">{user.college}</p>
             </div>
-            <button onClick={() => { logout(); router.navigate({ to: "/" }); }} className="text-muted-foreground hover:text-destructive">
+            <button onClick={async () => { await logout(); router.navigate({ to: "/" }); }} className="text-muted-foreground hover:text-destructive">
               <LogOut className="size-4" />
             </button>
           </div>
@@ -127,6 +135,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
         <main className="p-4 lg:p-8 max-w-7xl mx-auto">{children}</main>
       </div>
+      <ChatbotWidget />
     </div>
   );
 }

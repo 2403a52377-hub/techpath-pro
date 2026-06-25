@@ -1,44 +1,47 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth";
-import { ROADMAPS } from "@/lib/data";
 import {
-  TrendingUp, Target, Flame, Sparkles, Zap, BookOpen, Code2, Bot, Trophy, ArrowRight,
+  TrendingUp, Target, Flame, Sparkles, Zap, BookOpen, Code2, Bot, Trophy, ArrowRight, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/dashboard")({ component: Dashboard });
 
-function pickRoadmap(domain: string): string {
-  const map: Record<string, string> = {
-    "Full Stack Development": "full-stack",
-    "Frontend Development": "frontend",
-    "Backend Development": "backend",
-    "Data Analytics": "data-analyst",
-    "Data Science": "data-science",
-    "Artificial Intelligence": "ai-ml",
-    "Machine Learning": "ai-ml",
-    "Cybersecurity": "cybersecurity",
-    "Cloud Computing": "cloud",
-    "DevOps": "devops",
-    "Mobile App Development": "mobile",
-  };
-  return map[domain] ?? "full-stack";
-}
+type ProgressRow = {
+  roadmap_id: string;
+  completion_percentage: number;
+  roadmaps: { slug: string; title: string; estimated_duration: string } | null;
+};
 
 function Dashboard() {
   const { user } = useAuth();
+  const [rows, setRows] = useState<ProgressRow[] | null>(null);
+  const [resumeScore, setResumeScore] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from("user_progress")
+        .select("roadmap_id, completion_percentage, roadmaps(slug, title, estimated_duration)")
+        .eq("user_id", user.id);
+      setRows((data as any) ?? []);
+      const { data: r } = await supabase.from("resumes").select("resume_score").eq("user_id", user.id).maybeSingle();
+      setResumeScore(r?.resume_score ?? null);
+    })();
+  }, [user?.id]);
+
   if (!user) return null;
 
-  const slug = pickRoadmap(user.domain);
-  const roadmap = ROADMAPS[slug];
-  const progress = 32;
-  const placement = 64;
-  const resume = 78;
+  const avgProgress = rows && rows.length ? Math.round(rows.reduce((a, r) => a + r.completion_percentage, 0) / rows.length) : 0;
+  const placement = Math.min(100, Math.round(avgProgress * 0.5 + (resumeScore ?? 0) * 0.3 + Math.min(user.xp ?? 0, 1000) / 20));
+  const top = rows?.slice().sort((a, b) => b.completion_percentage - a.completion_percentage)[0];
 
   return (
     <AppShell>
-      {/* Hero */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-hero p-8 lg:p-10 shadow-elegant mb-8">
         <div className="absolute -top-20 -right-20 size-72 rounded-full bg-accent/40 blur-3xl" />
         <div className="relative text-primary-foreground">
@@ -52,46 +55,47 @@ function Dashboard() {
         </div>
       </section>
 
-      {/* Stats */}
       <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard icon={TrendingUp} label="Roadmap progress" value={`${progress}%`} hint={roadmap.name} color="from-primary to-primary-glow" />
-        <StatCard icon={Target} label="Placement readiness" value={`${placement}%`} hint="Top 25% of cohort" color="from-secondary to-primary" />
-        <StatCard icon={Flame} label="Resume score" value={`${resume}/100`} hint="ATS-friendly" color="from-accent to-pink-500" />
+        <StatCard icon={TrendingUp} label="Avg roadmap progress" value={`${avgProgress}%`} hint={rows ? `${rows.length} roadmaps active` : "—"} color="from-primary to-primary-glow" />
+        <StatCard icon={Target} label="Placement readiness" value={`${placement}%`} hint="Based on progress + resume" color="from-secondary to-primary" />
+        <StatCard icon={Flame} label="Resume score" value={resumeScore !== null ? `${resumeScore}/100` : "—"} hint="Build to score" color="from-accent to-pink-500" />
         <StatCard icon={Sparkles} label="Learning streak" value={`${user.streak} days`} hint={`${user.xp} XP earned`} color="from-emerald-500 to-cyan-500" />
       </section>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Roadmap progress */}
         <div className="lg:col-span-2 glass-card rounded-2xl p-6">
           <div className="flex items-start justify-between mb-6">
             <div>
-              <p className="text-xs uppercase tracking-widest text-accent font-semibold">Current Roadmap</p>
-              <h2 className="text-2xl font-bold mt-1">{roadmap.name}</h2>
-              <p className="text-sm text-muted-foreground">{roadmap.tagline} • {roadmap.duration}</p>
+              <p className="text-xs uppercase tracking-widest text-accent font-semibold">Your roadmaps</p>
+              <h2 className="text-2xl font-bold mt-1">Continue learning</h2>
             </div>
             <Button variant="hero" size="sm" asChild>
-              <Link to="/roadmaps/$slug" params={{ slug }}>Continue <ArrowRight className="size-4" /></Link>
+              <Link to="/roadmaps">All roadmaps <ArrowRight className="size-4" /></Link>
             </Button>
           </div>
+          {!rows && <div className="grid place-items-center py-10"><Loader2 className="size-6 animate-spin text-primary" /></div>}
+          {rows && rows.length === 0 && (
+            <div className="text-center py-10">
+              <p className="text-muted-foreground">No roadmaps started yet.</p>
+              <Button variant="hero" className="mt-4" asChild><Link to="/roadmaps">Browse roadmaps</Link></Button>
+            </div>
+          )}
           <div className="space-y-4">
-            {roadmap.stages.map((s, i) => {
-              const pct = i === 0 ? 80 : i === 1 ? 35 : 0;
-              return (
-                <div key={s.title}>
-                  <div className="flex justify-between text-sm mb-1.5">
-                    <span className="font-medium">{s.title} <span className="text-muted-foreground">• {s.level}</span></span>
-                    <span className="font-semibold">{pct}%</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-muted overflow-hidden">
-                    <div className="h-full bg-gradient-primary" style={{ width: `${pct}%` }} />
-                  </div>
+            {rows?.map((r) => (
+              <Link key={r.roadmap_id} to="/roadmaps/$slug" params={{ slug: r.roadmaps?.slug ?? "" }}
+                className="block p-4 rounded-lg bg-background/50 hover:bg-accent/10 transition-colors">
+                <div className="flex justify-between text-sm mb-1.5">
+                  <span className="font-semibold">{r.roadmaps?.title}</span>
+                  <span className="font-bold">{r.completion_percentage}%</span>
                 </div>
-              );
-            })}
+                <div className="h-2 rounded-full bg-muted overflow-hidden">
+                  <div className="h-full bg-gradient-primary" style={{ width: `${r.completion_percentage}%` }} />
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
 
-        {/* Daily challenges */}
         <div className="glass-card rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-4">
             <Zap className="size-5 text-accent" />
@@ -114,7 +118,6 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Quick actions */}
       <section className="mt-8">
         <h2 className="text-xl font-bold mb-4">Jump back in</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
