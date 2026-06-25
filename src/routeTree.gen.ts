@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResumeRouteImport } from './routes/resume'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as PlacementRouteImport } from './routes/placement'
 import { Route as MentorsRouteImport } from './routes/mentors'
@@ -17,6 +18,7 @@ import { Route as LearnRouteImport } from './routes/learn'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as JobsRouteImport } from './routes/jobs'
 import { Route as InterviewRouteImport } from './routes/interview'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CodingRouteImport } from './routes/coding'
@@ -32,6 +34,11 @@ import { Route as ApiChatRouteImport } from './routes/api/chat'
 const ResumeRoute = ResumeRouteImport.update({
   id: '/resume',
   path: '/resume',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectsRoute = ProjectsRouteImport.update({
@@ -67,6 +74,11 @@ const JobsRoute = JobsRouteImport.update({
 const InterviewRoute = InterviewRouteImport.update({
   id: '/interview',
   path: '/interview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -132,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/coding': typeof CodingRoute
   '/community': typeof CommunityRoute
   '/dashboard': typeof DashboardRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/interview': typeof InterviewRoute
   '/jobs': typeof JobsRoute
   '/leaderboard': typeof LeaderboardRoute
@@ -139,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/mentors': typeof MentorsRoute
   '/placement': typeof PlacementRoute
   '/projects': typeof ProjectsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/resume': typeof ResumeRoute
   '/api/chat': typeof ApiChatRoute
   '/companies/$slug': typeof CompaniesSlugRoute
@@ -153,6 +167,7 @@ export interface FileRoutesByTo {
   '/coding': typeof CodingRoute
   '/community': typeof CommunityRoute
   '/dashboard': typeof DashboardRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/interview': typeof InterviewRoute
   '/jobs': typeof JobsRoute
   '/leaderboard': typeof LeaderboardRoute
@@ -160,6 +175,7 @@ export interface FileRoutesByTo {
   '/mentors': typeof MentorsRoute
   '/placement': typeof PlacementRoute
   '/projects': typeof ProjectsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/resume': typeof ResumeRoute
   '/api/chat': typeof ApiChatRoute
   '/companies/$slug': typeof CompaniesSlugRoute
@@ -175,6 +191,7 @@ export interface FileRoutesById {
   '/coding': typeof CodingRoute
   '/community': typeof CommunityRoute
   '/dashboard': typeof DashboardRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/interview': typeof InterviewRoute
   '/jobs': typeof JobsRoute
   '/leaderboard': typeof LeaderboardRoute
@@ -182,6 +199,7 @@ export interface FileRoutesById {
   '/mentors': typeof MentorsRoute
   '/placement': typeof PlacementRoute
   '/projects': typeof ProjectsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/resume': typeof ResumeRoute
   '/api/chat': typeof ApiChatRoute
   '/companies/$slug': typeof CompaniesSlugRoute
@@ -198,6 +216,7 @@ export interface FileRouteTypes {
     | '/coding'
     | '/community'
     | '/dashboard'
+    | '/forgot-password'
     | '/interview'
     | '/jobs'
     | '/leaderboard'
@@ -205,6 +224,7 @@ export interface FileRouteTypes {
     | '/mentors'
     | '/placement'
     | '/projects'
+    | '/reset-password'
     | '/resume'
     | '/api/chat'
     | '/companies/$slug'
@@ -219,6 +239,7 @@ export interface FileRouteTypes {
     | '/coding'
     | '/community'
     | '/dashboard'
+    | '/forgot-password'
     | '/interview'
     | '/jobs'
     | '/leaderboard'
@@ -226,6 +247,7 @@ export interface FileRouteTypes {
     | '/mentors'
     | '/placement'
     | '/projects'
+    | '/reset-password'
     | '/resume'
     | '/api/chat'
     | '/companies/$slug'
@@ -240,6 +262,7 @@ export interface FileRouteTypes {
     | '/coding'
     | '/community'
     | '/dashboard'
+    | '/forgot-password'
     | '/interview'
     | '/jobs'
     | '/leaderboard'
@@ -247,6 +270,7 @@ export interface FileRouteTypes {
     | '/mentors'
     | '/placement'
     | '/projects'
+    | '/reset-password'
     | '/resume'
     | '/api/chat'
     | '/companies/$slug'
@@ -262,6 +286,7 @@ export interface RootRouteChildren {
   CodingRoute: typeof CodingRoute
   CommunityRoute: typeof CommunityRoute
   DashboardRoute: typeof DashboardRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   InterviewRoute: typeof InterviewRoute
   JobsRoute: typeof JobsRoute
   LeaderboardRoute: typeof LeaderboardRoute
@@ -269,6 +294,7 @@ export interface RootRouteChildren {
   MentorsRoute: typeof MentorsRoute
   PlacementRoute: typeof PlacementRoute
   ProjectsRoute: typeof ProjectsRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ResumeRoute: typeof ResumeRoute
   ApiChatRoute: typeof ApiChatRoute
   CompaniesSlugRoute: typeof CompaniesSlugRoute
@@ -284,6 +310,13 @@ declare module '@tanstack/react-router' {
       path: '/resume'
       fullPath: '/resume'
       preLoaderRoute: typeof ResumeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/projects': {
@@ -333,6 +366,13 @@ declare module '@tanstack/react-router' {
       path: '/interview'
       fullPath: '/interview'
       preLoaderRoute: typeof InterviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -422,6 +462,7 @@ const rootRouteChildren: RootRouteChildren = {
   CodingRoute: CodingRoute,
   CommunityRoute: CommunityRoute,
   DashboardRoute: DashboardRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   InterviewRoute: InterviewRoute,
   JobsRoute: JobsRoute,
   LeaderboardRoute: LeaderboardRoute,
@@ -429,6 +470,7 @@ const rootRouteChildren: RootRouteChildren = {
   MentorsRoute: MentorsRoute,
   PlacementRoute: PlacementRoute,
   ProjectsRoute: ProjectsRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ResumeRoute: ResumeRoute,
   ApiChatRoute: ApiChatRoute,
   CompaniesSlugRoute: CompaniesSlugRoute,
