@@ -135,6 +135,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
         <main className="p-4 lg:p-8 max-w-7xl mx-auto">{children}</main>
       </div>
+      <ChatbotWidget />
     </div>
   );
 }
