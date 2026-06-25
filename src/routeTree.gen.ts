@@ -9,38 +9,354 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ResumeRouteImport } from './routes/resume'
+import { Route as ProjectsRouteImport } from './routes/projects'
+import { Route as PlacementRouteImport } from './routes/placement'
+import { Route as MentorsRouteImport } from './routes/mentors'
+import { Route as LearnRouteImport } from './routes/learn'
+import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as JobsRouteImport } from './routes/jobs'
+import { Route as InterviewRouteImport } from './routes/interview'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as CommunityRouteImport } from './routes/community'
+import { Route as CodingRouteImport } from './routes/coding'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AssistantRouteImport } from './routes/assistant'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RoadmapsIndexRouteImport } from './routes/roadmaps.index'
+import { Route as CompaniesIndexRouteImport } from './routes/companies.index'
+import { Route as RoadmapsSlugRouteImport } from './routes/roadmaps.$slug'
+import { Route as CompaniesSlugRouteImport } from './routes/companies.$slug'
 
+const ResumeRoute = ResumeRouteImport.update({
+  id: '/resume',
+  path: '/resume',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsRoute = ProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlacementRoute = PlacementRouteImport.update({
+  id: '/placement',
+  path: '/placement',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MentorsRoute = MentorsRouteImport.update({
+  id: '/mentors',
+  path: '/mentors',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LearnRoute = LearnRouteImport.update({
+  id: '/learn',
+  path: '/learn',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeaderboardRoute = LeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JobsRoute = JobsRouteImport.update({
+  id: '/jobs',
+  path: '/jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InterviewRoute = InterviewRouteImport.update({
+  id: '/interview',
+  path: '/interview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommunityRoute = CommunityRouteImport.update({
+  id: '/community',
+  path: '/community',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CodingRoute = CodingRouteImport.update({
+  id: '/coding',
+  path: '/coding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssistantRoute = AssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RoadmapsIndexRoute = RoadmapsIndexRouteImport.update({
+  id: '/roadmaps/',
+  path: '/roadmaps/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompaniesIndexRoute = CompaniesIndexRouteImport.update({
+  id: '/companies/',
+  path: '/companies/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoadmapsSlugRoute = RoadmapsSlugRouteImport.update({
+  id: '/roadmaps/$slug',
+  path: '/roadmaps/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompaniesSlugRoute = CompaniesSlugRouteImport.update({
+  id: '/companies/$slug',
+  path: '/companies/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/assistant': typeof AssistantRoute
+  '/auth': typeof AuthRoute
+  '/coding': typeof CodingRoute
+  '/community': typeof CommunityRoute
+  '/dashboard': typeof DashboardRoute
+  '/interview': typeof InterviewRoute
+  '/jobs': typeof JobsRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/learn': typeof LearnRoute
+  '/mentors': typeof MentorsRoute
+  '/placement': typeof PlacementRoute
+  '/projects': typeof ProjectsRoute
+  '/resume': typeof ResumeRoute
+  '/companies/$slug': typeof CompaniesSlugRoute
+  '/roadmaps/$slug': typeof RoadmapsSlugRoute
+  '/companies/': typeof CompaniesIndexRoute
+  '/roadmaps/': typeof RoadmapsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/assistant': typeof AssistantRoute
+  '/auth': typeof AuthRoute
+  '/coding': typeof CodingRoute
+  '/community': typeof CommunityRoute
+  '/dashboard': typeof DashboardRoute
+  '/interview': typeof InterviewRoute
+  '/jobs': typeof JobsRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/learn': typeof LearnRoute
+  '/mentors': typeof MentorsRoute
+  '/placement': typeof PlacementRoute
+  '/projects': typeof ProjectsRoute
+  '/resume': typeof ResumeRoute
+  '/companies/$slug': typeof CompaniesSlugRoute
+  '/roadmaps/$slug': typeof RoadmapsSlugRoute
+  '/companies': typeof CompaniesIndexRoute
+  '/roadmaps': typeof RoadmapsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/assistant': typeof AssistantRoute
+  '/auth': typeof AuthRoute
+  '/coding': typeof CodingRoute
+  '/community': typeof CommunityRoute
+  '/dashboard': typeof DashboardRoute
+  '/interview': typeof InterviewRoute
+  '/jobs': typeof JobsRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/learn': typeof LearnRoute
+  '/mentors': typeof MentorsRoute
+  '/placement': typeof PlacementRoute
+  '/projects': typeof ProjectsRoute
+  '/resume': typeof ResumeRoute
+  '/companies/$slug': typeof CompaniesSlugRoute
+  '/roadmaps/$slug': typeof RoadmapsSlugRoute
+  '/companies/': typeof CompaniesIndexRoute
+  '/roadmaps/': typeof RoadmapsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/assistant'
+    | '/auth'
+    | '/coding'
+    | '/community'
+    | '/dashboard'
+    | '/interview'
+    | '/jobs'
+    | '/leaderboard'
+    | '/learn'
+    | '/mentors'
+    | '/placement'
+    | '/projects'
+    | '/resume'
+    | '/companies/$slug'
+    | '/roadmaps/$slug'
+    | '/companies/'
+    | '/roadmaps/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/assistant'
+    | '/auth'
+    | '/coding'
+    | '/community'
+    | '/dashboard'
+    | '/interview'
+    | '/jobs'
+    | '/leaderboard'
+    | '/learn'
+    | '/mentors'
+    | '/placement'
+    | '/projects'
+    | '/resume'
+    | '/companies/$slug'
+    | '/roadmaps/$slug'
+    | '/companies'
+    | '/roadmaps'
+  id:
+    | '__root__'
+    | '/'
+    | '/assistant'
+    | '/auth'
+    | '/coding'
+    | '/community'
+    | '/dashboard'
+    | '/interview'
+    | '/jobs'
+    | '/leaderboard'
+    | '/learn'
+    | '/mentors'
+    | '/placement'
+    | '/projects'
+    | '/resume'
+    | '/companies/$slug'
+    | '/roadmaps/$slug'
+    | '/companies/'
+    | '/roadmaps/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AssistantRoute: typeof AssistantRoute
+  AuthRoute: typeof AuthRoute
+  CodingRoute: typeof CodingRoute
+  CommunityRoute: typeof CommunityRoute
+  DashboardRoute: typeof DashboardRoute
+  InterviewRoute: typeof InterviewRoute
+  JobsRoute: typeof JobsRoute
+  LeaderboardRoute: typeof LeaderboardRoute
+  LearnRoute: typeof LearnRoute
+  MentorsRoute: typeof MentorsRoute
+  PlacementRoute: typeof PlacementRoute
+  ProjectsRoute: typeof ProjectsRoute
+  ResumeRoute: typeof ResumeRoute
+  CompaniesSlugRoute: typeof CompaniesSlugRoute
+  RoadmapsSlugRoute: typeof RoadmapsSlugRoute
+  CompaniesIndexRoute: typeof CompaniesIndexRoute
+  RoadmapsIndexRoute: typeof RoadmapsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/resume': {
+      id: '/resume'
+      path: '/resume'
+      fullPath: '/resume'
+      preLoaderRoute: typeof ResumeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects': {
+      id: '/projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof ProjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/placement': {
+      id: '/placement'
+      path: '/placement'
+      fullPath: '/placement'
+      preLoaderRoute: typeof PlacementRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mentors': {
+      id: '/mentors'
+      path: '/mentors'
+      fullPath: '/mentors'
+      preLoaderRoute: typeof MentorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/learn': {
+      id: '/learn'
+      path: '/learn'
+      fullPath: '/learn'
+      preLoaderRoute: typeof LearnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leaderboard': {
+      id: '/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jobs': {
+      id: '/jobs'
+      path: '/jobs'
+      fullPath: '/jobs'
+      preLoaderRoute: typeof JobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/interview': {
+      id: '/interview'
+      path: '/interview'
+      fullPath: '/interview'
+      preLoaderRoute: typeof InterviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/community': {
+      id: '/community'
+      path: '/community'
+      fullPath: '/community'
+      preLoaderRoute: typeof CommunityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/coding': {
+      id: '/coding'
+      path: '/coding'
+      fullPath: '/coding'
+      preLoaderRoute: typeof CodingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assistant': {
+      id: '/assistant'
+      path: '/assistant'
+      fullPath: '/assistant'
+      preLoaderRoute: typeof AssistantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +364,57 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/roadmaps/': {
+      id: '/roadmaps/'
+      path: '/roadmaps'
+      fullPath: '/roadmaps/'
+      preLoaderRoute: typeof RoadmapsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/companies/': {
+      id: '/companies/'
+      path: '/companies'
+      fullPath: '/companies/'
+      preLoaderRoute: typeof CompaniesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/roadmaps/$slug': {
+      id: '/roadmaps/$slug'
+      path: '/roadmaps/$slug'
+      fullPath: '/roadmaps/$slug'
+      preLoaderRoute: typeof RoadmapsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/companies/$slug': {
+      id: '/companies/$slug'
+      path: '/companies/$slug'
+      fullPath: '/companies/$slug'
+      preLoaderRoute: typeof CompaniesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AssistantRoute: AssistantRoute,
+  AuthRoute: AuthRoute,
+  CodingRoute: CodingRoute,
+  CommunityRoute: CommunityRoute,
+  DashboardRoute: DashboardRoute,
+  InterviewRoute: InterviewRoute,
+  JobsRoute: JobsRoute,
+  LeaderboardRoute: LeaderboardRoute,
+  LearnRoute: LearnRoute,
+  MentorsRoute: MentorsRoute,
+  PlacementRoute: PlacementRoute,
+  ProjectsRoute: ProjectsRoute,
+  ResumeRoute: ResumeRoute,
+  CompaniesSlugRoute: CompaniesSlugRoute,
+  RoadmapsSlugRoute: RoadmapsSlugRoute,
+  CompaniesIndexRoute: CompaniesIndexRoute,
+  RoadmapsIndexRoute: RoadmapsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
