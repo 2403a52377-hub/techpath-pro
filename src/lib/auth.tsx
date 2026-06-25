@@ -137,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (patch.xp !== undefined) payload.xp = patch.xp;
     if (patch.streak !== undefined) payload.streak = patch.streak;
     if (patch.avatarUrl !== undefined) payload.avatar_url = patch.avatarUrl;
-    const { error } = await supabase.from("profiles").update(payload).eq("id", user.id);
+    const { error } = await supabase.from("profiles").update(payload as never).eq("id", user.id);
     if (error) return { error: error.message };
     setUser({ ...user, ...patch });
     return {};

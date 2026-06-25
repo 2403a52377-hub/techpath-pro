@@ -27,6 +27,7 @@ import { Route as RoadmapsIndexRouteImport } from './routes/roadmaps.index'
 import { Route as CompaniesIndexRouteImport } from './routes/companies.index'
 import { Route as RoadmapsSlugRouteImport } from './routes/roadmaps.$slug'
 import { Route as CompaniesSlugRouteImport } from './routes/companies.$slug'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 
 const ResumeRoute = ResumeRouteImport.update({
   id: '/resume',
@@ -118,6 +119,11 @@ const CompaniesSlugRoute = CompaniesSlugRouteImport.update({
   path: '/companies/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -134,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/placement': typeof PlacementRoute
   '/projects': typeof ProjectsRoute
   '/resume': typeof ResumeRoute
+  '/api/chat': typeof ApiChatRoute
   '/companies/$slug': typeof CompaniesSlugRoute
   '/roadmaps/$slug': typeof RoadmapsSlugRoute
   '/companies/': typeof CompaniesIndexRoute
@@ -154,6 +161,7 @@ export interface FileRoutesByTo {
   '/placement': typeof PlacementRoute
   '/projects': typeof ProjectsRoute
   '/resume': typeof ResumeRoute
+  '/api/chat': typeof ApiChatRoute
   '/companies/$slug': typeof CompaniesSlugRoute
   '/roadmaps/$slug': typeof RoadmapsSlugRoute
   '/companies': typeof CompaniesIndexRoute
@@ -175,6 +183,7 @@ export interface FileRoutesById {
   '/placement': typeof PlacementRoute
   '/projects': typeof ProjectsRoute
   '/resume': typeof ResumeRoute
+  '/api/chat': typeof ApiChatRoute
   '/companies/$slug': typeof CompaniesSlugRoute
   '/roadmaps/$slug': typeof RoadmapsSlugRoute
   '/companies/': typeof CompaniesIndexRoute
@@ -197,6 +206,7 @@ export interface FileRouteTypes {
     | '/placement'
     | '/projects'
     | '/resume'
+    | '/api/chat'
     | '/companies/$slug'
     | '/roadmaps/$slug'
     | '/companies/'
@@ -217,6 +227,7 @@ export interface FileRouteTypes {
     | '/placement'
     | '/projects'
     | '/resume'
+    | '/api/chat'
     | '/companies/$slug'
     | '/roadmaps/$slug'
     | '/companies'
@@ -237,6 +248,7 @@ export interface FileRouteTypes {
     | '/placement'
     | '/projects'
     | '/resume'
+    | '/api/chat'
     | '/companies/$slug'
     | '/roadmaps/$slug'
     | '/companies/'
@@ -258,6 +270,7 @@ export interface RootRouteChildren {
   PlacementRoute: typeof PlacementRoute
   ProjectsRoute: typeof ProjectsRoute
   ResumeRoute: typeof ResumeRoute
+  ApiChatRoute: typeof ApiChatRoute
   CompaniesSlugRoute: typeof CompaniesSlugRoute
   RoadmapsSlugRoute: typeof RoadmapsSlugRoute
   CompaniesIndexRoute: typeof CompaniesIndexRoute
@@ -392,6 +405,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompaniesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -410,6 +430,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlacementRoute: PlacementRoute,
   ProjectsRoute: ProjectsRoute,
   ResumeRoute: ResumeRoute,
+  ApiChatRoute: ApiChatRoute,
   CompaniesSlugRoute: CompaniesSlugRoute,
   RoadmapsSlugRoute: RoadmapsSlugRoute,
   CompaniesIndexRoute: CompaniesIndexRoute,
