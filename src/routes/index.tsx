@@ -181,7 +181,7 @@ function Landing() {
           <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4">
             {COMPANIES.map((c) => (
               <div key={c} className="glass-card rounded-xl p-6 hover:shadow-elegant transition-all">
-                <Building className="mx-auto" />
+                <Building />
                 <p className="mt-2 font-semibold">{c}</p>
               </div>
             ))}
