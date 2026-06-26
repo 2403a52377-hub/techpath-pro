@@ -20,7 +20,9 @@ function ResetPasswordPage() {
     <div className="min-h-screen grid place-items-center p-6">
       <div className="w-full max-w-md">
         <h1 className="text-3xl font-bold">Set a new password</h1>
-        <p className="mt-1 text-muted-foreground">Choose a strong password (8+ characters, mix of letters, numbers, symbols).</p>
+        <p className="mt-1 text-muted-foreground">
+          Choose a strong password (8+ characters, mix of letters, numbers, symbols).
+        </p>
         <form
           className="mt-6 space-y-4"
           onSubmit={async (e) => {
@@ -39,11 +41,25 @@ function ResetPasswordPage() {
         >
           <div>
             <Label htmlFor="np">New password</Label>
-            <Input id="np" type="password" required value={pw} onChange={(e) => setPw(e.target.value)} className="mt-1.5" />
+            <Input
+              id="np"
+              type="password"
+              required
+              value={pw}
+              onChange={(e) => setPw(e.target.value)}
+              className="mt-1.5"
+            />
           </div>
           <div>
             <Label htmlFor="cp">Confirm password</Label>
-            <Input id="cp" type="password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} className="mt-1.5" />
+            <Input
+              id="cp"
+              type="password"
+              required
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              className="mt-1.5"
+            />
           </div>
           <Button type="submit" variant="hero" className="w-full" disabled={busy}>
             {busy ? <Loader2 className="size-4 animate-spin" /> : "Update password"}

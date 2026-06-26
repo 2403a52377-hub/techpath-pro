@@ -24,7 +24,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ChatbotWidget } from "@/components/ChatbotWidget";
+
 import { supabase } from "@/integrations/supabase/client";
 
 const NAV = [
@@ -52,8 +52,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    if (!user) { setIsAdmin(false); return; }
-    supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }).then(({ data }) => setIsAdmin(!!data));
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    supabase
+      .rpc("has_role", { _user_id: user.id, _role: "admin" })
+      .then(({ data }) => setIsAdmin(!!data));
   }, [user?.id]);
 
   if (loading) {
@@ -81,13 +86,16 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
       >
         <div className="flex h-16 items-center gap-2 px-6 border-b border-border/60">
-          <div className="size-8 rounded-lg bg-gradient-primary grid place-items-center text-primary-foreground font-bold">T</div>
+          <div className="size-8 rounded-lg bg-gradient-primary grid place-items-center text-primary-foreground font-bold">
+            T
+          </div>
           <span className="text-lg font-bold gradient-text">TechLand</span>
         </div>
         <nav className="p-3 space-y-1 overflow-y-auto h-[calc(100vh-4rem-5rem)]">
           {NAV.map((item) => {
             const Icon = item.icon;
-            const active = pathname === item.to || (item.to !== "/dashboard" && pathname.startsWith(item.to));
+            const active =
+              pathname === item.to || (item.to !== "/dashboard" && pathname.startsWith(item.to));
             return (
               <Link
                 key={item.to}
@@ -130,7 +138,13 @@ export function AppShell({ children }: { children: ReactNode }) {
               <p className="text-sm font-semibold truncate">{user.fullName}</p>
               <p className="text-xs text-muted-foreground truncate">{user.college}</p>
             </div>
-            <button onClick={async () => { await logout(); router.navigate({ to: "/" }); }} className="text-muted-foreground hover:text-destructive">
+            <button
+              onClick={async () => {
+                await logout();
+                router.navigate({ to: "/" });
+              }}
+              className="text-muted-foreground hover:text-destructive"
+            >
               <LogOut className="size-4" />
             </button>
           </div>
@@ -158,7 +172,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
         <main className="p-4 lg:p-8 max-w-7xl mx-auto">{children}</main>
       </div>
-      <ChatbotWidget />
     </div>
   );
 }

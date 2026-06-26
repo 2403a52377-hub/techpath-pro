@@ -32,7 +32,10 @@ const QUESTIONS = {
 function InterviewPrep() {
   return (
     <AppShell>
-      <PageHeader title="Interview Preparation" subtitle="Technical, HR, behavioral questions plus AI mock interview simulator with feedback reports." />
+      <PageHeader
+        title="Interview Preparation"
+        subtitle="Technical, HR, behavioral questions plus AI mock interview simulator with feedback reports."
+      />
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
         <FeatureTile icon={Brain} title="AI Mock Interview" desc="Practice with TechLand AI" />
@@ -47,8 +50,13 @@ function InterviewPrep() {
             <h2 className="text-xl font-bold mb-4">{cat} questions</h2>
             <div className="space-y-2">
               {qs.map((q, i) => (
-                <div key={q} className="glass-card rounded-xl p-4 flex items-start gap-3 hover:shadow-elegant transition-all">
-                  <span className="size-7 rounded-full bg-gradient-primary text-primary-foreground text-xs font-bold grid place-items-center shrink-0">{i + 1}</span>
+                <div
+                  key={q}
+                  className="glass-card rounded-xl p-4 flex items-start gap-3 hover:shadow-elegant transition-all"
+                >
+                  <span className="size-7 rounded-full bg-gradient-primary text-primary-foreground text-xs font-bold grid place-items-center shrink-0">
+                    {i + 1}
+                  </span>
                   <p className="text-sm">{q}</p>
                 </div>
               ))}
@@ -60,7 +68,15 @@ function InterviewPrep() {
   );
 }
 
-function FeatureTile({ icon: Icon, title, desc }: { icon: React.ComponentType<{ className?: string }>; title: string; desc: string }) {
+function FeatureTile({
+  icon: Icon,
+  title,
+  desc,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  desc: string;
+}) {
   return (
     <div className="glass-card rounded-2xl p-5 hover:shadow-elegant hover:-translate-y-1 transition-all cursor-pointer">
       <div className="size-10 rounded-xl bg-gradient-accent grid place-items-center mb-3">

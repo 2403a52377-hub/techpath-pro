@@ -12,10 +12,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "TechLand — AI-Powered Career & Placement Platform for Engineers" },
-      { name: "description", content: "TechLand helps engineering students upskill, prepare for placements, build resumes, and land top tech jobs with AI-powered guidance." },
+      {
+        name: "description",
+        content:
+          "TechLand helps engineering students upskill, prepare for placements, build resumes, and land top tech jobs with AI-powered guidance.",
+      },
       { name: "author", content: "TechLand" },
       { property: "og:title", content: "TechLand — Career to Placement, Powered by AI" },
-      { property: "og:description", content: "Roadmaps, coding practice, resume builder, mock interviews and an AI career coach — built for engineering students." },
+      {
+        property: "og:description",
+        content:
+          "Roadmaps, coding practice, resume builder, mock interviews and an AI career coach — built for engineering students.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -28,7 +36,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       <div className="text-center">
         <h1 className="text-7xl font-bold gradient-text">404</h1>
         <p className="mt-4 text-muted-foreground">This page took a gap year.</p>
-        <a href="/" className="inline-block mt-6 px-5 py-2.5 rounded-lg bg-gradient-primary text-primary-foreground font-medium">Go home</a>
+        <a
+          href="/"
+          className="inline-block mt-6 px-5 py-2.5 rounded-lg bg-gradient-primary text-primary-foreground font-medium"
+        >
+          Go home
+        </a>
       </div>
     </div>
   ),
@@ -37,7 +50,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <head><HeadContent /></head>
+      <head>
+        <HeadContent />
+      </head>
       <body>
         {children}
         <Scripts />

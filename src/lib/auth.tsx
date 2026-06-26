@@ -5,10 +5,20 @@ import { supabase } from "@/integrations/supabase/client";
 export type Year = "1st Year" | "2nd Year" | "3rd Year" | "4th Year" | "Graduate Student";
 export type Level = "Beginner" | "Intermediate" | "Advanced";
 export type Domain =
-  | "Full Stack Development" | "Frontend Development" | "Backend Development"
-  | "Data Analytics" | "Data Science" | "Artificial Intelligence" | "Machine Learning"
-  | "Cybersecurity" | "Cloud Computing" | "DevOps" | "Mobile App Development"
-  | "UI/UX Design" | "Software Testing" | "Blockchain";
+  | "Full Stack Development"
+  | "Frontend Development"
+  | "Backend Development"
+  | "Data Analytics"
+  | "Data Science"
+  | "Artificial Intelligence"
+  | "Machine Learning"
+  | "Cybersecurity"
+  | "Cloud Computing"
+  | "DevOps"
+  | "Mobile App Development"
+  | "UI/UX Design"
+  | "Software Testing"
+  | "Blockchain";
 
 export interface Profile {
   id: string;
@@ -74,7 +84,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   async function loadProfile(u: SupabaseUser | null) {
-    if (!u) { setUser(null); return; }
+    if (!u) {
+      setUser(null);
+      return;
+    }
     const { data } = await supabase.from("profiles").select("*").eq("id", u.id).maybeSingle();
     setUser(rowToProfile(data, u));
   }
@@ -83,17 +96,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
       // defer profile load to avoid potential deadlock
-      setTimeout(() => { loadProfile(s?.user ?? null); }, 0);
+      setTimeout(() => {
+        loadProfile(s?.user ?? null);
+      }, 0);
     });
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       loadProfile(data.session?.user ?? null).finally(() => setLoading(false));
     });
-    return () => { sub.subscription.unsubscribe(); };
+    return () => {
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   const signup: AuthCtx["signup"] = async (input) => {
-    const redirectUrl = typeof window !== "undefined" ? `${window.location.origin}/dashboard` : undefined;
+    const redirectUrl =
+      typeof window !== "undefined" ? `${window.location.origin}/dashboard` : undefined;
     const { error } = await supabase.auth.signUp({
       email: input.email.trim(),
       password: input.password,
@@ -137,7 +155,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (patch.xp !== undefined) payload.xp = patch.xp;
     if (patch.streak !== undefined) payload.streak = patch.streak;
     if (patch.avatarUrl !== undefined) payload.avatar_url = patch.avatarUrl;
-    const { error } = await supabase.from("profiles").update(payload as never).eq("id", user.id);
+    const { error } = await supabase
+      .from("profiles")
+      .update(payload as never)
+      .eq("id", user.id);
     if (error) return { error: error.message };
     setUser({ ...user, ...patch });
     return {};
@@ -149,8 +170,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const forgotPassword: AuthCtx["forgotPassword"] = async (email) => {
-    const redirect = typeof window !== "undefined" ? `${window.location.origin}/reset-password` : undefined;
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: redirect });
+    const redirect =
+      typeof window !== "undefined" ? `${window.location.origin}/reset-password` : undefined;
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: redirect,
+    });
     if (error) return { error: error.message };
     return {};
   };
@@ -162,7 +186,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <Ctx.Provider value={{ user, session, loading, signup, login, logout, update, refresh, forgotPassword, resetPassword }}>
+    <Ctx.Provider
+      value={{
+        user,
+        session,
+        loading,
+        signup,
+        login,
+        logout,
+        update,
+        refresh,
+        forgotPassword,
+        resetPassword,
+      }}
+    >
       {children}
     </Ctx.Provider>
   );

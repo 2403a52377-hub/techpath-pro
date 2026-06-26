@@ -1,7 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "./roadmaps.index";
-import { Bookmark, MapPin, Briefcase, ExternalLink, Loader2, BookmarkCheck, Search, Filter, Globe2, Building2, Banknote, Calendar } from "lucide-react";
+import {
+  Bookmark,
+  MapPin,
+  Briefcase,
+  ExternalLink,
+  Loader2,
+  BookmarkCheck,
+  Search,
+  Filter,
+  Globe2,
+  Building2,
+  Banknote,
+  Calendar,
+} from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,8 +66,12 @@ function JobsPage() {
   const { data: jobs, isLoading } = useQuery({
     queryKey: ["jobs", debouncedQ, remoteOnly, category],
     queryFn: async () => {
-      let query = supabase.from("jobs").select("*").order("posted_at", { ascending: false }).limit(50);
-      
+      let query = supabase
+        .from("jobs")
+        .select("*")
+        .order("posted_at", { ascending: false })
+        .limit(50);
+
       if (debouncedQ) {
         query = query.textSearch("fts", debouncedQ, { type: "websearch", config: "english" });
       }
@@ -105,29 +122,49 @@ function JobsPage() {
     onError: (err: any) => toast.error(err.message),
   });
 
-  const categories = ["Frontend", "Backend", "Full Stack", "Data Science & AI", "Cloud & DevOps", "Mobile", "Design", "Engineering"];
+  const categories = [
+    "Frontend",
+    "Backend",
+    "Full Stack",
+    "Data Science & AI",
+    "Cloud & DevOps",
+    "Mobile",
+    "Design",
+    "Engineering",
+  ];
 
   return (
     <AppShell>
-      <PageHeader title="Jobs & Internships" subtitle="Real-time fresher roles, internships, and off-campus drives." />
+      <PageHeader
+        title="Jobs & Internships"
+        subtitle="Real-time fresher roles, internships, and off-campus drives."
+      />
 
       <Tabs defaultValue="find" className="mt-8">
         <TabsList className="mb-6 bg-glass border border-white/10">
           <TabsTrigger value="find">Find Jobs</TabsTrigger>
-          <TabsTrigger value="dashboard" disabled={!user}>My Dashboard</TabsTrigger>
+          <TabsTrigger value="dashboard" disabled={!user}>
+            My Dashboard
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="find" className="flex flex-col lg:flex-row gap-8 items-start">
-          
           {/* Filters Sidebar */}
           <aside className="w-full lg:w-64 glass-card rounded-2xl p-5 shrink-0 sticky top-24">
-            <h3 className="font-bold flex items-center gap-2 mb-4"><Filter className="size-4" /> Filters</h3>
-            
+            <h3 className="font-bold flex items-center gap-2 mb-4">
+              <Filter className="size-4" /> Filters
+            </h3>
+
             <div className="space-y-5">
               <div>
                 <label className="text-sm font-medium mb-2 block">Work Mode</label>
                 <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" checked={remoteOnly} onChange={(e) => setRemoteOnly(e.target.checked)} className="rounded border-white/20 bg-background/50 accent-primary" />
+                  <input
+                    type="checkbox"
+                    checked={remoteOnly}
+                    onChange={(e) => setRemoteOnly(e.target.checked)}
+                    className="rounded border-white/20 bg-background/50 accent-primary"
+                  />
                   Remote Only
                 </label>
               </div>
@@ -135,17 +172,17 @@ function JobsPage() {
               <div>
                 <label className="text-sm font-medium mb-2 block">Category</label>
                 <div className="space-y-2">
-                  <button 
-                    onClick={() => setCategory(null)} 
-                    className={`block text-left text-sm w-full py-1 ${!category ? 'text-primary font-medium' : 'text-muted-foreground hover:text-foreground'}`}
+                  <button
+                    onClick={() => setCategory(null)}
+                    className={`block text-left text-sm w-full py-1 ${!category ? "text-primary font-medium" : "text-muted-foreground hover:text-foreground"}`}
                   >
                     All Categories
                   </button>
-                  {categories.map(c => (
-                    <button 
+                  {categories.map((c) => (
+                    <button
                       key={c}
-                      onClick={() => setCategory(c)} 
-                      className={`block text-left text-sm w-full py-1 ${category === c ? 'text-primary font-medium' : 'text-muted-foreground hover:text-foreground'}`}
+                      onClick={() => setCategory(c)}
+                      className={`block text-left text-sm w-full py-1 ${category === c ? "text-primary font-medium" : "text-muted-foreground hover:text-foreground"}`}
                     >
                       {c}
                     </button>
@@ -159,16 +196,18 @@ function JobsPage() {
           <div className="flex-1 w-full space-y-5">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search jobs, skills, companies…" 
-                value={q} 
-                onChange={(e) => setQ(e.target.value)} 
-                className="pl-10 bg-glass border-white/10 h-12 rounded-xl" 
+              <Input
+                placeholder="Search jobs, skills, companies…"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                className="pl-10 bg-glass border-white/10 h-12 rounded-xl"
               />
             </div>
 
             {isLoading ? (
-              <div className="grid place-items-center py-16"><Loader2 className="size-6 animate-spin text-primary" /></div>
+              <div className="grid place-items-center py-16">
+                <Loader2 className="size-6 animate-spin text-primary" />
+              </div>
             ) : jobs?.length === 0 ? (
               <div className="text-center py-16 glass-card rounded-2xl">
                 <p className="text-muted-foreground">No jobs found matching your criteria.</p>
@@ -176,11 +215,11 @@ function JobsPage() {
             ) : (
               <div className="grid sm:grid-cols-2 gap-4">
                 {jobs?.map((j) => (
-                  <JobCard 
-                    key={j.id} 
-                    job={j} 
-                    isSaved={savedJobs.has(j.id)} 
-                    onSave={() => toggleSave.mutate(j.id)} 
+                  <JobCard
+                    key={j.id}
+                    job={j}
+                    isSaved={savedJobs.has(j.id)}
+                    onSave={() => toggleSave.mutate(j.id)}
                   />
                 ))}
               </div>
@@ -202,7 +241,11 @@ function JobCard({ job, isSaved, onSave }: { job: Job; isSaved: boolean; onSave:
       <div className="flex items-start justify-between gap-4">
         <div className="flex gap-3 items-start">
           {job.company_logo ? (
-            <img src={job.company_logo} alt={job.company} className="size-10 rounded-lg object-contain bg-white/5" />
+            <img
+              src={job.company_logo}
+              alt={job.company}
+              className="size-10 rounded-lg object-contain bg-white/5"
+            />
           ) : (
             <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold uppercase">
               {job.company.charAt(0)}
@@ -215,11 +258,22 @@ function JobCard({ job, isSaved, onSave }: { job: Job; isSaved: boolean; onSave:
             </p>
           </div>
         </div>
-        <button onClick={onSave} className={isSaved ? "text-primary" : "text-muted-foreground hover:text-primary transition-colors shrink-0"}>
-          {isSaved ? <BookmarkCheck className="size-5 fill-primary/20" /> : <Bookmark className="size-5" />}
+        <button
+          onClick={onSave}
+          className={
+            isSaved
+              ? "text-primary"
+              : "text-muted-foreground hover:text-primary transition-colors shrink-0"
+          }
+        >
+          {isSaved ? (
+            <BookmarkCheck className="size-5 fill-primary/20" />
+          ) : (
+            <Bookmark className="size-5" />
+          )}
         </button>
       </div>
-      
+
       <div className="mt-4 flex flex-wrap gap-2 text-xs">
         {job.location && (
           <Badge variant="secondary" className="bg-white/5 font-normal text-muted-foreground">
@@ -227,7 +281,10 @@ function JobCard({ job, isSaved, onSave }: { job: Job; isSaved: boolean; onSave:
           </Badge>
         )}
         {job.is_remote && (
-          <Badge variant="secondary" className="bg-green-500/10 text-green-400 font-normal border-green-500/20">
+          <Badge
+            variant="secondary"
+            className="bg-green-500/10 text-green-400 font-normal border-green-500/20"
+          >
             <Globe2 className="size-3 mr-1" /> Remote
           </Badge>
         )}
@@ -244,17 +301,23 @@ function JobCard({ job, isSaved, onSave }: { job: Job; isSaved: boolean; onSave:
       {job.skills && job.skills.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-1.5">
           {job.skills.slice(0, 4).map((s, i) => (
-            <span key={i} className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full border border-white/10 text-muted-foreground">
+            <span
+              key={i}
+              className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full border border-white/10 text-muted-foreground"
+            >
               {s}
             </span>
           ))}
-          {job.skills.length > 4 && <span className="text-[10px] text-muted-foreground">+{job.skills.length - 4}</span>}
+          {job.skills.length > 4 && (
+            <span className="text-[10px] text-muted-foreground">+{job.skills.length - 4}</span>
+          )}
         </div>
       )}
 
       <div className="mt-auto pt-5 flex items-center justify-between">
         <span className="text-xs text-muted-foreground flex items-center gap-1">
-          <Calendar className="size-3" /> {formatDistanceToNow(new Date(job.posted_at), { addSuffix: true })}
+          <Calendar className="size-3" />{" "}
+          {formatDistanceToNow(new Date(job.posted_at), { addSuffix: true })}
         </span>
         <Button variant="hero" size="sm" className="h-8 text-xs" asChild>
           <a href={job.apply_url} target="_blank" rel="noopener noreferrer">
@@ -266,18 +329,26 @@ function JobCard({ job, isSaved, onSave }: { job: Job; isSaved: boolean; onSave:
   );
 }
 
-function DashboardTab({ user, savedJobsSet }: { user: any, savedJobsSet: Set<string> }) {
+function DashboardTab({ user, savedJobsSet }: { user: any; savedJobsSet: Set<string> }) {
   const { data: savedJobsList, isLoading } = useQuery({
     queryKey: ["saved_jobs_details", Array.from(savedJobsSet)],
     enabled: savedJobsSet.size > 0,
     queryFn: async () => {
-      const { data, error } = await supabase.from("jobs").select("*").in("id", Array.from(savedJobsSet));
+      const { data, error } = await supabase
+        .from("jobs")
+        .select("*")
+        .in("id", Array.from(savedJobsSet));
       if (error) throw error;
       return data as Job[];
-    }
+    },
   });
 
-  if (isLoading) return <div className="py-16 text-center"><Loader2 className="size-6 animate-spin mx-auto text-primary" /></div>;
+  if (isLoading)
+    return (
+      <div className="py-16 text-center">
+        <Loader2 className="size-6 animate-spin mx-auto text-primary" />
+      </div>
+    );
 
   return (
     <div className="space-y-8">
@@ -302,7 +373,7 @@ function DashboardTab({ user, savedJobsSet }: { user: any, savedJobsSet: Set<str
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {savedJobsList?.map(j => (
+            {savedJobsList?.map((j) => (
               <JobCard key={j.id} job={j} isSaved={true} onSave={() => {}} />
             ))}
           </div>

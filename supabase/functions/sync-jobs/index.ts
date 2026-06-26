@@ -68,7 +68,8 @@ serve(async (req) => {
           country: null,
           employment_type: "Full-time",
           experience_level: null,
-          salary: job.salary_min && job.salary_max ? `$${job.salary_min}k - $${job.salary_max}k` : null,
+          salary:
+            job.salary_min && job.salary_max ? `$${job.salary_min}k - $${job.salary_max}k` : null,
           skills: job.tags || [],
           description: job.description,
           apply_url: job.url,
@@ -104,12 +105,16 @@ serve(async (req) => {
 
 function mapCategory(title: string): string {
   const t = title.toLowerCase();
-  if (t.includes("front") || t.includes("react") || t.includes("angular") || t.includes("vue")) return "Frontend";
-  if (t.includes("back") || t.includes("node") || t.includes("python") || t.includes("java")) return "Backend";
+  if (t.includes("front") || t.includes("react") || t.includes("angular") || t.includes("vue"))
+    return "Frontend";
+  if (t.includes("back") || t.includes("node") || t.includes("python") || t.includes("java"))
+    return "Backend";
   if (t.includes("full") || t.includes("stack")) return "Full Stack";
-  if (t.includes("data") || t.includes("machine") || t.includes("ai") || t.includes("ml")) return "Data Science & AI";
+  if (t.includes("data") || t.includes("machine") || t.includes("ai") || t.includes("ml"))
+    return "Data Science & AI";
   if (t.includes("cloud") || t.includes("devops") || t.includes("aws")) return "Cloud & DevOps";
-  if (t.includes("mobile") || t.includes("ios") || t.includes("android") || t.includes("flutter")) return "Mobile";
+  if (t.includes("mobile") || t.includes("ios") || t.includes("android") || t.includes("flutter"))
+    return "Mobile";
   if (t.includes("ui") || t.includes("ux") || t.includes("design")) return "Design";
   return "Engineering";
 }

@@ -18,11 +18,17 @@ function ForgotPasswordPage() {
   return (
     <div className="min-h-screen grid place-items-center p-6">
       <div className="w-full max-w-md">
-        <Link to="/auth" search={{ tab: "login" }} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6">
+        <Link
+          to="/auth"
+          search={{ tab: "login" }}
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6"
+        >
           <ArrowLeft className="size-4" /> Back to login
         </Link>
         <h1 className="text-3xl font-bold">Reset your password</h1>
-        <p className="mt-1 text-muted-foreground">Enter your institute email and we'll send you a reset link.</p>
+        <p className="mt-1 text-muted-foreground">
+          Enter your institute email and we'll send you a reset link.
+        </p>
         {sent ? (
           <div className="mt-6 p-4 rounded-lg bg-success/10 border border-success/30 text-sm">
             Check your inbox at <strong>{email}</strong> for a password reset link.
@@ -36,12 +42,22 @@ function ForgotPasswordPage() {
               const res = await forgotPassword(email);
               setBusy(false);
               if (res.error) toast.error(res.error);
-              else { setSent(true); toast.success("Reset link sent"); }
+              else {
+                setSent(true);
+                toast.success("Reset link sent");
+              }
             }}
           >
             <div>
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1.5" />
+              <Input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1.5"
+              />
             </div>
             <Button type="submit" variant="hero" className="w-full" disabled={busy}>
               {busy ? <Loader2 className="size-4 animate-spin" /> : "Send reset link"}
