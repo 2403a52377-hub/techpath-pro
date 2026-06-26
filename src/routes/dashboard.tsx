@@ -136,6 +136,35 @@ function Dashboard() {
         </div>
       </div>
 
+      <section className="glass-card rounded-2xl p-6 mt-8">
+        <div className="flex items-center gap-2 mb-4">
+          <Activity className="size-5 text-primary" />
+          <h2 className="text-lg font-bold">Weekly activity</h2>
+          <span className="ml-auto text-xs text-muted-foreground">XP earned · last 7 days</span>
+        </div>
+        <div className="h-56 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={weekly} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="xpFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="oklch(var(--primary) / 0.6)" stopOpacity={0.8} />
+                  <stop offset="100%" stopColor="oklch(var(--primary) / 0.6)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="oklch(var(--border) / 0.4)" strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="day" tick={{ fill: "currentColor", fontSize: 12 }} stroke="oklch(var(--border) / 0.4)" />
+              <YAxis tick={{ fill: "currentColor", fontSize: 12 }} stroke="oklch(var(--border) / 0.4)" />
+              <Tooltip
+                contentStyle={{ background: "oklch(var(--card))", border: "1px solid oklch(var(--border))", borderRadius: 12 }}
+                labelStyle={{ color: "oklch(var(--foreground))" }}
+              />
+              <Area type="monotone" dataKey="xp" stroke="oklch(var(--primary))" strokeWidth={2} fill="url(#xpFill)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </section>
+
+
       <section className="mt-8">
         <h2 className="text-xl font-bold mb-4">Jump back in</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
