@@ -18,12 +18,14 @@ import {
   Sparkles,
   Menu,
   X,
+  ShieldCheck,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ChatbotWidget } from "@/components/ChatbotWidget";
+import { supabase } from "@/integrations/supabase/client";
 
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -47,6 +49,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [open, setOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) { setIsAdmin(false); return; }
+    supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }).then(({ data }) => setIsAdmin(!!data));
+  }, [user?.id]);
 
   if (loading) {
     return (
@@ -97,6 +105,21 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
+          {isAdmin && (
+            <Link
+              to="/admin"
+              onClick={() => setOpen(false)}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                pathname.startsWith("/admin")
+                  ? "bg-gradient-primary text-primary-foreground shadow-md"
+                  : "text-muted-foreground hover:bg-accent/10 hover:text-foreground",
+              )}
+            >
+              <ShieldCheck className="size-4" />
+              Admin
+            </Link>
+          )}
         </nav>
         <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-border/60 bg-background/40 backdrop-blur">
           <div className="flex items-center gap-3 px-2 py-2">

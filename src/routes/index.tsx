@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
   ArrowRight, Map, Code2, FileText, Bot, Briefcase, Trophy,
-  Sparkles, CheckCircle2, Github, Linkedin, GraduationCap,
+  Sparkles, CheckCircle2, Github, Linkedin, GraduationCap, Star, Quote,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({ component: Landing });
@@ -183,6 +183,37 @@ function Landing() {
               <div key={c} className="glass-card rounded-xl p-6 hover:shadow-elegant transition-all">
                 <Building />
                 <p className="mt-2 font-semibold">{c}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section id="testimonials" className="py-24 bg-background/40 border-y border-border/60">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-2xl mx-auto">
+            <p className="text-sm font-semibold text-accent uppercase tracking-widest">Loved by students</p>
+            <h2 className="mt-3 text-4xl lg:text-5xl font-bold">Real wins. Real offers.</h2>
+            <p className="mt-4 text-lg text-muted-foreground">From first-year explorers to final-year placement champs.</p>
+          </div>
+          <div className="mt-12 grid md:grid-cols-3 gap-6">
+            {[
+              { n: "Ananya Sharma", r: "SDE Intern @ Amazon", q: "The AI mock interviews felt scarily real. I walked into my Amazon loop calm and confident.", c: "IIT Roorkee · CSE" },
+              { n: "Rohan Mehta", r: "Data Analyst @ Flipkart", q: "Roadmaps + YouTube playlists in one place. I stopped doom-scrolling tutorials and actually shipped projects.", c: "VIT · IT" },
+              { n: "Priya Iyer", r: "Frontend Engineer @ Razorpay", q: "Resume builder bumped my ATS score from 52 to 91. Got 4 interview calls in the same week.", c: "BITS Pilani · ECE" },
+            ].map((t) => (
+              <div key={t.n} className="glass-card rounded-2xl p-6 hover:shadow-elegant transition-all">
+                <Quote className="size-6 text-accent mb-3" />
+                <p className="text-sm leading-relaxed">"{t.q}"</p>
+                <div className="mt-4 flex items-center gap-1 text-accent">
+                  {Array.from({ length: 5 }).map((_, i) => <Star key={i} className="size-4 fill-current" />)}
+                </div>
+                <div className="mt-4 pt-4 border-t border-border/60">
+                  <p className="font-semibold text-sm">{t.n}</p>
+                  <p className="text-xs text-muted-foreground">{t.r}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t.c}</p>
+                </div>
               </div>
             ))}
           </div>
