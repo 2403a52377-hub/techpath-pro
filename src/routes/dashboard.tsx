@@ -147,18 +147,18 @@ function Dashboard() {
             <AreaChart data={weekly} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="xpFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="oklch(var(--primary) / 0.6)" stopOpacity={0.8} />
-                  <stop offset="100%" stopColor="oklch(var(--primary) / 0.6)" stopOpacity={0} />
+                  <stop offset="0%" stopColor="color-mix(in oklab, var(--primary) 60%, transparent)" stopOpacity={0.8} />
+                  <stop offset="100%" stopColor="color-mix(in oklab, var(--primary) 60%, transparent)" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid stroke="oklch(var(--border) / 0.4)" strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="day" tick={{ fill: "currentColor", fontSize: 12 }} stroke="oklch(var(--border) / 0.4)" />
-              <YAxis tick={{ fill: "currentColor", fontSize: 12 }} stroke="oklch(var(--border) / 0.4)" />
+              <CartesianGrid stroke="color-mix(in oklab, var(--border) 40%, transparent)" strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="day" tick={{ fill: "currentColor", fontSize: 12 }} stroke="color-mix(in oklab, var(--border) 40%, transparent)" />
+              <YAxis tick={{ fill: "currentColor", fontSize: 12 }} stroke="color-mix(in oklab, var(--border) 40%, transparent)" />
               <Tooltip
-                contentStyle={{ background: "oklch(var(--card))", border: "1px solid oklch(var(--border))", borderRadius: 12 }}
-                labelStyle={{ color: "oklch(var(--foreground))" }}
+                contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12 }}
+                labelStyle={{ color: "var(--foreground)" }}
               />
-              <Area type="monotone" dataKey="xp" stroke="oklch(var(--primary))" strokeWidth={2} fill="url(#xpFill)" />
+              <Area type="monotone" dataKey="xp" stroke="var(--primary)" strokeWidth={2} fill="url(#xpFill)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
