@@ -105,6 +105,21 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
+          {isAdmin && (
+            <Link
+              to="/admin"
+              onClick={() => setOpen(false)}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                pathname.startsWith("/admin")
+                  ? "bg-gradient-primary text-primary-foreground shadow-md"
+                  : "text-muted-foreground hover:bg-accent/10 hover:text-foreground",
+              )}
+            >
+              <ShieldCheck className="size-4" />
+              Admin
+            </Link>
+          )}
         </nav>
         <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-border/60 bg-background/40 backdrop-blur">
           <div className="flex items-center gap-3 px-2 py-2">
