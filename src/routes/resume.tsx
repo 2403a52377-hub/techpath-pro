@@ -21,6 +21,7 @@ type ResumeData = {
   project: string;
   experience: string;
   education: string;
+  websiteUrl: string;
 };
 
 const DEFAULT: ResumeData = {
@@ -33,6 +34,7 @@ const DEFAULT: ResumeData = {
   experience:
     "Software Engineering Intern @ Razorpay — May 2025 to Jul 2025. Built payment dashboards using React and TypeScript; shipped 4 features used by 10K+ merchants.",
   education: "B.Tech, Computer Science — Expected 2026",
+  websiteUrl: "",
 };
 
 function ResumeBuilder() {
@@ -115,7 +117,7 @@ function ResumeBuilder() {
               onChange={(e) => setData({ ...data, headline: e.target.value })}
             />
           </Field>
-          <Field label="Professional summary">
+          <Field label="Professional Profile">
             <Textarea
               rows={3}
               value={data.summary}
@@ -146,6 +148,14 @@ function ResumeBuilder() {
               rows={3}
               value={data.experience}
               onChange={(e) => setData({ ...data, experience: e.target.value })}
+            />
+          </Field>
+          <Field label="Portfolio / Resume Website URL">
+            <Input
+              type="url"
+              placeholder="https://yourportfolio.com"
+              value={data.websiteUrl}
+              onChange={(e) => setData({ ...data, websiteUrl: e.target.value })}
             />
           </Field>
           <div className="flex flex-wrap gap-3">
@@ -200,11 +210,39 @@ function ResumeBuilder() {
         <p className="text-sm text-muted-foreground">
           {user?.email} • {user?.college} • {user?.branch}
         </p>
-        <Section title="Summary">{data.summary}</Section>
+        {data.websiteUrl && (
+          <p className="text-sm mt-1">
+            🌐{" "}
+            <a
+              href={data.websiteUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline underline-offset-2 hover:text-primary/80 transition-colors"
+            >
+              {data.websiteUrl}
+            </a>
+          </p>
+        )}
+        <Section title="Professional Profile">{data.summary}</Section>
         <Section title="Skills">{data.skills}</Section>
         <Section title="Education">{data.education}</Section>
         <Section title="Projects">{data.project}</Section>
         <Section title="Experience">{data.experience}</Section>
+        {data.websiteUrl && (
+          <div className="mt-6 pt-4 border-t border-border text-center">
+            <p className="text-xs text-muted-foreground">
+              Portfolio & Resume:{" "}
+              <a
+                href={data.websiteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary font-semibold underline underline-offset-2"
+              >
+                {data.websiteUrl}
+              </a>
+            </p>
+          </div>
+        )}
       </div>
     </AppShell>
   );
@@ -273,9 +311,10 @@ function ResumePdf({
         <Text style={pdfStyles.headline}>{data.headline}</Text>
         <Text style={pdfStyles.contact}>
           {user.email} • {user.college} • {user.branch}
+          {data.websiteUrl ? ` • ${data.websiteUrl}` : ""}
         </Text>
         <View style={pdfStyles.hr} />
-        <Text style={pdfStyles.h}>SUMMARY</Text>
+        <Text style={pdfStyles.h}>PROFESSIONAL PROFILE</Text>
         <Text style={pdfStyles.body}>{data.summary}</Text>
         <Text style={pdfStyles.h}>SKILLS</Text>
         <Text style={pdfStyles.body}>{data.skills}</Text>
@@ -285,6 +324,13 @@ function ResumePdf({
         <Text style={pdfStyles.body}>{data.project}</Text>
         <Text style={pdfStyles.h}>EXPERIENCE</Text>
         <Text style={pdfStyles.body}>{data.experience}</Text>
+        {data.websiteUrl ? (
+          <View style={{ marginTop: 16, borderTop: 1, borderColor: "#e2e8f0", paddingTop: 8 }}>
+            <Text style={{ fontSize: 9, color: "#64748b", textAlign: "center" }}>
+              Portfolio & Resume Website: {data.websiteUrl}
+            </Text>
+          </View>
+        ) : null}
       </Page>
     </Document>
   );
