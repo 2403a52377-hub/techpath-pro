@@ -2,382 +2,475 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "./roadmaps.index";
 import {
-  Bookmark,
-  MapPin,
-  Briefcase,
-  ExternalLink,
-  Loader2,
-  BookmarkCheck,
-  Search,
-  Filter,
-  Globe2,
-  Building2,
-  Banknote,
-  Calendar,
+  Bookmark, BookmarkCheck, Search, Globe2, Building2,
+  Calendar, RefreshCw, ExternalLink, X, MapPin, Tag,
+  Briefcase, Loader2, ChevronRight, Wifi, WifiOff,
+  Filter, Zap,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { toast } from "sonner";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/jobs")({ component: JobsPage });
 
-type Job = {
+/* ──────────────────────── TYPES ──── */
+type LiveJob = {
   id: string;
-  external_id?: string;
   title: string;
   company: string;
-  company_logo?: string;
-  location?: string;
-  country?: string;
-  employment_type: string;
-  experience_level?: string;
-  salary?: string;
-  skills: string[];
-  description?: string;
-  apply_url: string;
+  location: string;
+  remote: boolean;
+  tags: string[];
+  jobTypes: string[];
+  description: string;
+  applyUrl: string;
   source: string;
-  is_remote: boolean;
-  category?: string;
-  posted_at: string;
+  postedAt: number;
 };
 
+/* ──────────────────────── DOMAIN MAP ──── */
+const DOMAINS: Record<string, string[]> = {
+  "All":               [],
+  "Frontend":          ["react","vue","angular","svelte","html","css","javascript","typescript","nextjs","frontend","ui"],
+  "Backend":           ["node","nodejs","python","java","golang","go","php","ruby","backend","django","spring","fastapi","laravel"],
+  "Full Stack":        ["fullstack","full-stack","mern","mean","react","node","postgresql","mongodb"],
+  "Data Science & AI": ["python","ml","machine-learning","data-science","ai","tensorflow","pytorch","data","analytics","nlp","llm"],
+  "Cloud & DevOps":    ["aws","azure","gcp","docker","kubernetes","devops","terraform","cloud","ci-cd","linux"],
+  "Mobile":            ["android","ios","flutter","react-native","swift","kotlin","mobile"],
+  "Design":            ["figma","ui-ux","design","ux","product-design","css"],
+};
+
+const DOMAIN_COLORS: Record<string, string> = {
+  "All":               "bg-primary/10 text-primary border-primary/20",
+  "Frontend":          "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
+  "Backend":           "bg-green-500/10 text-green-400 border-green-500/20",
+  "Full Stack":        "bg-violet-500/10 text-violet-400 border-violet-500/20",
+  "Data Science & AI": "bg-orange-500/10 text-orange-400 border-orange-500/20",
+  "Cloud & DevOps":    "bg-sky-500/10 text-sky-400 border-sky-500/20",
+  "Mobile":            "bg-pink-500/10 text-pink-400 border-pink-500/20",
+  "Design":            "bg-rose-500/10 text-rose-400 border-rose-500/20",
+};
+
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function matchesDomain(job: LiveJob, domain: string): boolean {
+  if (domain === "All") return true;
+  const tags = DOMAINS[domain];
+  return job.tags.some((t) => tags.some((d) => t.toLowerCase().includes(d)));
+}
+
+/* ──────────────────────── FETCH LIVE JOBS ──── */
+async function fetchArbeitnow(page = 1): Promise<LiveJob[]> {
+  const res = await fetch(`https://arbeitnow.com/api/job-board-api?page=${page}`, {
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) throw new Error("Arbeitnow fetch failed");
+  const json = await res.json();
+  return (json.data ?? []).map((j: any) => ({
+    id: j.slug,
+    title: j.title,
+    company: j.company_name,
+    location: j.location || "Remote",
+    remote: j.remote ?? false,
+    tags: j.tags ?? [],
+    jobTypes: j.job_types ?? [],
+    description: stripHtml(j.description ?? ""),
+    applyUrl: j.url,
+    source: "Arbeitnow",
+    postedAt: j.created_at * 1000,
+  }));
+}
+
+async function fetchRemotive(category = "software-dev"): Promise<LiveJob[]> {
+  try {
+    const res = await fetch(
+      `https://remotive.com/api/remote-jobs?category=${category}&limit=30`,
+    );
+    if (!res.ok) return [];
+    const json = await res.json();
+    return (json.jobs ?? []).map((j: any) => ({
+      id: `rem-${j.id}`,
+      title: j.title,
+      company: j.company_name,
+      location: j.candidate_required_location || "Remote",
+      remote: true,
+      tags: (j.tags ?? []).map((t: string) => t.toLowerCase()),
+      jobTypes: [j.job_type ?? "full-time"],
+      description: stripHtml(j.description ?? ""),
+      applyUrl: j.url,
+      source: "Remotive",
+      postedAt: new Date(j.publication_date).getTime(),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/* ──────────────────────── MAIN PAGE ──── */
 function JobsPage() {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const [jobs, setJobs] = useState<LiveJob[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [q, setQ] = useState("");
-  const [debouncedQ, setDebouncedQ] = useState("");
+  const [domain, setDomain] = useState("All");
   const [remoteOnly, setRemoteOnly] = useState(false);
-  const [category, setCategory] = useState<string | null>(null);
+  const [saved, setSaved] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("savedJobs") ?? "[]")); }
+    catch { return new Set(); }
+  });
+  const [selected, setSelected] = useState<LiveJob | null>(null);
 
-  // Debounce search
-  useState(() => {
-    const handler = setTimeout(() => setDebouncedQ(q), 500);
-    return () => clearTimeout(handler);
+  const loadJobs = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [page1, page2, remotive] = await Promise.allSettled([
+        fetchArbeitnow(1),
+        fetchArbeitnow(2),
+        fetchRemotive("software-dev"),
+      ]);
+      const all: LiveJob[] = [];
+      if (page1.status === "fulfilled") all.push(...page1.value);
+      if (page2.status === "fulfilled") all.push(...page2.value);
+      if (remotive.status === "fulfilled") all.push(...remotive.value);
+      // Deduplicate by id
+      const seen = new Set<string>();
+      const unique = all.filter((j) => { if (seen.has(j.id)) return false; seen.add(j.id); return true; });
+      setJobs(unique);
+      setLastUpdated(new Date());
+    } catch (e: any) {
+      setError("Could not load live jobs. Check your connection.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadJobs(); }, []);
+
+  // Auto-refresh every 30 minutes
+  useEffect(() => {
+    const id = setInterval(loadJobs, 30 * 60 * 1000);
+    return () => clearInterval(id);
+  }, [loadJobs]);
+
+  function toggleSave(id: string) {
+    setSaved((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      localStorage.setItem("savedJobs", JSON.stringify([...next]));
+      return next;
+    });
+  }
+
+  const filtered = jobs.filter((j) => {
+    if (remoteOnly && !j.remote) return false;
+    if (!matchesDomain(j, domain)) return false;
+    if (q) {
+      const sq = q.toLowerCase();
+      return j.title.toLowerCase().includes(sq) || j.company.toLowerCase().includes(sq) || j.tags.some((t) => t.includes(sq));
+    }
+    return true;
   });
 
-  // Fetch Jobs
-  const { data: jobs, isLoading } = useQuery({
-    queryKey: ["jobs", debouncedQ, remoteOnly, category],
-    queryFn: async () => {
-      let query = supabase
-        .from("jobs")
-        .select("*")
-        .order("posted_at", { ascending: false })
-        .limit(50);
-
-      if (debouncedQ) {
-        query = query.textSearch("fts", debouncedQ, { type: "websearch", config: "english" });
-      }
-      if (remoteOnly) {
-        query = query.eq("is_remote", true);
-      }
-      if (category) {
-        query = query.eq("category", category);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as Job[];
-    },
+  const counts: Record<string, number> = {};
+  Object.keys(DOMAINS).forEach((d) => {
+    counts[d] = d === "All" ? jobs.length : jobs.filter((j) => matchesDomain(j, d)).length;
   });
-
-  // Fetch Saved Jobs IDs
-  const { data: savedJobs = new Set() } = useQuery({
-    queryKey: ["saved_jobs", user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      const { data } = await supabase.from("saved_jobs").select("job_id").eq("user_id", user!.id);
-      return new Set((data ?? []).map((r) => r.job_id));
-    },
-  });
-
-  // Toggle Save Mutation
-  const toggleSave = useMutation({
-    mutationFn: async (jobId: string) => {
-      if (!user) throw new Error("Sign in to save jobs");
-      if (savedJobs.has(jobId)) {
-        await supabase.from("saved_jobs").delete().eq("user_id", user.id).eq("job_id", jobId);
-        return { jobId, saved: false };
-      } else {
-        await supabase.from("saved_jobs").insert({ user_id: user.id, job_id: jobId });
-        return { jobId, saved: true };
-      }
-    },
-    onSuccess: (data) => {
-      queryClient.setQueryData(["saved_jobs", user?.id], (old: Set<string>) => {
-        const next = new Set(old);
-        if (data.saved) next.add(data.jobId);
-        else next.delete(data.jobId);
-        return next;
-      });
-      toast.success(data.saved ? "Job saved!" : "Removed from saved.");
-    },
-    onError: (err: any) => toast.error(err.message),
-  });
-
-  const categories = [
-    "Frontend",
-    "Backend",
-    "Full Stack",
-    "Data Science & AI",
-    "Cloud & DevOps",
-    "Mobile",
-    "Design",
-    "Engineering",
-  ];
 
   return (
     <AppShell>
-      <PageHeader
-        title="Jobs & Internships"
-        subtitle="Real-time fresher roles, internships, and off-campus drives."
-      />
+      <div className="flex items-start justify-between flex-wrap gap-3">
+        <PageHeader
+          title="Jobs & Internships"
+          subtitle="Live opportunities fetched in real-time — browse, filter, and apply without leaving the app."
+        />
+        <div className="flex items-center gap-2 mt-2">
+          {lastUpdated && (
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              {error ? <WifiOff className="size-3 text-rose-400" /> : <Wifi className="size-3 text-emerald-400" />}
+              Updated {formatDistanceToNow(lastUpdated, { addSuffix: true })}
+            </span>
+          )}
+          <Button variant="outline" size="sm" onClick={loadJobs} disabled={loading}>
+            <RefreshCw className={cn("size-4", loading && "animate-spin")} /> Refresh
+          </Button>
+        </div>
+      </div>
 
-      <Tabs defaultValue="find" className="mt-8">
-        <TabsList className="mb-6 bg-glass border border-white/10">
-          <TabsTrigger value="find">Find Jobs</TabsTrigger>
-          <TabsTrigger value="dashboard" disabled={!user}>
-            My Dashboard
-          </TabsTrigger>
-        </TabsList>
+      {/* Stats Bar */}
+      <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: "Live Jobs", value: jobs.length || "—" },
+          { label: "Remote", value: jobs.filter((j) => j.remote).length || "—" },
+          { label: "Sources", value: "2 APIs" },
+          { label: "Saved", value: saved.size },
+        ].map((s) => (
+          <div key={s.label} className="glass-card rounded-xl p-3 text-center">
+            <p className="text-xl font-bold gradient-text">{s.value}</p>
+            <p className="text-xs text-muted-foreground">{s.label}</p>
+          </div>
+        ))}
+      </div>
 
-        <TabsContent value="find" className="flex flex-col lg:flex-row gap-8 items-start">
-          {/* Filters Sidebar */}
-          <aside className="w-full lg:w-64 glass-card rounded-2xl p-5 shrink-0 sticky top-24">
-            <h3 className="font-bold flex items-center gap-2 mb-4">
-              <Filter className="size-4" /> Filters
-            </h3>
+      {/* Domain Tabs */}
+      <div className="mt-5 flex gap-2 flex-wrap">
+        {Object.keys(DOMAINS).map((d) => (
+          <button
+            key={d}
+            onClick={() => setDomain(d)}
+            className={cn(
+              "text-xs px-3 py-1.5 rounded-full border font-semibold transition-all",
+              domain === d ? DOMAIN_COLORS[d] : "border-white/10 text-muted-foreground hover:border-white/20",
+            )}
+          >
+            {d} <span className="opacity-60">({counts[d] ?? 0})</span>
+          </button>
+        ))}
+      </div>
 
-            <div className="space-y-5">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Work Mode</label>
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={remoteOnly}
-                    onChange={(e) => setRemoteOnly(e.target.checked)}
-                    className="rounded border-white/20 bg-background/50 accent-primary"
-                  />
-                  Remote Only
-                </label>
-              </div>
+      {/* Search + Filter Row */}
+      <div className="mt-4 flex gap-3 items-center flex-wrap">
+        <div className="relative flex-1 min-w-48">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+          <Input
+            placeholder="Search role, company, skill…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            className="pl-10 bg-glass border-white/10 h-10 rounded-xl"
+          />
+        </div>
+        <label className="flex items-center gap-2 text-sm cursor-pointer glass-card px-3 py-2 rounded-xl border border-white/10">
+          <input type="checkbox" checked={remoteOnly} onChange={(e) => setRemoteOnly(e.target.checked)} className="accent-primary" />
+          <Globe2 className="size-4 text-emerald-400" /> Remote only
+        </label>
+        {(q || remoteOnly || domain !== "All") && (
+          <Button variant="outline" size="sm" onClick={() => { setQ(""); setRemoteOnly(false); setDomain("All"); }}>
+            <X className="size-3 mr-1" /> Clear
+          </Button>
+        )}
+      </div>
 
-              <div>
-                <label className="text-sm font-medium mb-2 block">Category</label>
-                <div className="space-y-2">
-                  <button
-                    onClick={() => setCategory(null)}
-                    className={`block text-left text-sm w-full py-1 ${!category ? "text-primary font-medium" : "text-muted-foreground hover:text-foreground"}`}
-                  >
-                    All Categories
-                  </button>
-                  {categories.map((c) => (
-                    <button
-                      key={c}
-                      onClick={() => setCategory(c)}
-                      className={`block text-left text-sm w-full py-1 ${category === c ? "text-primary font-medium" : "text-muted-foreground hover:text-foreground"}`}
-                    >
-                      {c}
-                    </button>
-                  ))}
-                </div>
+      {/* Main Content */}
+      <div className={cn("mt-5 flex gap-5 items-start", selected && "lg:flex-row")}>
+        {/* Job List */}
+        <div className={cn("flex-1 min-w-0", selected ? "hidden lg:block" : "")}>
+          {loading ? (
+            <div className="grid place-items-center py-24">
+              <div className="text-center">
+                <Loader2 className="size-8 animate-spin text-primary mx-auto mb-3" />
+                <p className="text-muted-foreground text-sm">Fetching live jobs…</p>
               </div>
             </div>
-          </aside>
-
-          {/* Job Listings */}
-          <div className="flex-1 w-full space-y-5">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input
-                placeholder="Search jobs, skills, companies…"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                className="pl-10 bg-glass border-white/10 h-12 rounded-xl"
-              />
+          ) : error ? (
+            <div className="glass-card rounded-2xl p-8 text-center">
+              <WifiOff className="size-8 text-rose-400 mx-auto mb-3" />
+              <p className="text-rose-400 font-semibold">{error}</p>
+              <Button variant="hero" className="mt-4" onClick={loadJobs}>Retry</Button>
             </div>
-
-            {isLoading ? (
-              <div className="grid place-items-center py-16">
-                <Loader2 className="size-6 animate-spin text-primary" />
-              </div>
-            ) : jobs?.length === 0 ? (
-              <div className="text-center py-16 glass-card rounded-2xl">
-                <p className="text-muted-foreground">No jobs found matching your criteria.</p>
-              </div>
-            ) : (
+          ) : filtered.length === 0 ? (
+            <div className="glass-card rounded-2xl p-10 text-center">
+              <p className="text-muted-foreground">No jobs match your filters. Try a different domain or search term.</p>
+            </div>
+          ) : (
+            <>
+              <p className="text-xs text-muted-foreground mb-3 flex items-center gap-1">
+                <Zap className="size-3 text-primary" /> Showing {filtered.length} live opportunities
+              </p>
               <div className="grid sm:grid-cols-2 gap-4">
-                {jobs?.map((j) => (
+                {filtered.map((job) => (
                   <JobCard
-                    key={j.id}
-                    job={j}
-                    isSaved={savedJobs.has(j.id)}
-                    onSave={() => toggleSave.mutate(j.id)}
+                    key={job.id}
+                    job={job}
+                    isSaved={saved.has(job.id)}
+                    isSelected={selected?.id === job.id}
+                    onSave={() => toggleSave(job.id)}
+                    onSelect={() => setSelected(selected?.id === job.id ? null : job)}
                   />
                 ))}
               </div>
-            )}
-          </div>
-        </TabsContent>
+            </>
+          )}
+        </div>
 
-        <TabsContent value="dashboard">
-          <DashboardTab user={user} savedJobsSet={savedJobs} />
-        </TabsContent>
-      </Tabs>
+        {/* In-App Job Detail Panel */}
+        {selected && <JobDetailPanel job={selected} isSaved={saved.has(selected.id)} onSave={() => toggleSave(selected.id)} onClose={() => setSelected(null)} />}
+      </div>
+
+      {/* Mobile Detail Modal */}
+      {selected && (
+        <div className="fixed inset-0 z-50 lg:hidden bg-background/95 backdrop-blur overflow-y-auto">
+          <JobDetailPanel job={selected} isSaved={saved.has(selected.id)} onSave={() => toggleSave(selected.id)} onClose={() => setSelected(null)} mobile />
+        </div>
+      )}
     </AppShell>
   );
 }
 
-function JobCard({ job, isSaved, onSave }: { job: Job; isSaved: boolean; onSave: () => void }) {
+/* ──────────────────────── JOB CARD ──── */
+function JobCard({ job, isSaved, isSelected, onSave, onSelect }: {
+  job: LiveJob; isSaved: boolean; isSelected: boolean;
+  onSave: () => void; onSelect: () => void;
+}) {
   return (
-    <div className="glass-card rounded-2xl p-5 hover:border-primary/30 transition-all flex flex-col">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex gap-3 items-start">
-          {job.company_logo ? (
-            <img
-              src={job.company_logo}
-              alt={job.company}
-              className="size-10 rounded-lg object-contain bg-white/5"
-            />
-          ) : (
-            <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold uppercase">
-              {job.company.charAt(0)}
-            </div>
-          )}
-          <div>
-            <h3 className="font-bold leading-tight">{job.title}</h3>
-            <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-              <Building2 className="size-3" /> {job.company}
-            </p>
-          </div>
+    <div
+      className={cn(
+        "glass-card rounded-2xl p-5 flex flex-col border transition-all cursor-pointer hover:-translate-y-0.5",
+        isSelected ? "border-primary/50 bg-primary/5 shadow-elegant" : "border-white/5 hover:border-primary/25",
+      )}
+      onClick={onSelect}
+    >
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="size-10 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 grid place-items-center shrink-0 font-bold text-primary">
+          {job.company.charAt(0).toUpperCase()}
         </div>
-        <button
-          onClick={onSave}
-          className={
-            isSaved
-              ? "text-primary"
-              : "text-muted-foreground hover:text-primary transition-colors shrink-0"
-          }
-        >
-          {isSaved ? (
-            <BookmarkCheck className="size-5 fill-primary/20" />
-          ) : (
-            <Bookmark className="size-5" />
-          )}
+        <div className="flex-1 min-w-0">
+          <h3 className="font-bold text-sm leading-tight line-clamp-2">{job.title}</h3>
+          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+            <Building2 className="size-3" /> {job.company}
+          </p>
+        </div>
+        <button onClick={(e) => { e.stopPropagation(); onSave(); }} className={cn("shrink-0 transition-colors", isSaved ? "text-primary" : "text-muted-foreground hover:text-primary")}>
+          {isSaved ? <BookmarkCheck className="size-5 fill-primary/20" /> : <Bookmark className="size-5" />}
         </button>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2 text-xs">
-        {job.location && (
-          <Badge variant="secondary" className="bg-white/5 font-normal text-muted-foreground">
-            <MapPin className="size-3 mr-1" /> {job.location}
+      {/* Badges */}
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {job.remote && (
+          <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px]">
+            <Globe2 className="size-2.5 mr-1" /> Remote
           </Badge>
         )}
-        {job.is_remote && (
-          <Badge
-            variant="secondary"
-            className="bg-green-500/10 text-green-400 font-normal border-green-500/20"
-          >
-            <Globe2 className="size-3 mr-1" /> Remote
+        {job.location && !job.remote && (
+          <Badge className="bg-white/5 text-muted-foreground text-[10px]">
+            <MapPin className="size-2.5 mr-1" /> {job.location}
           </Badge>
         )}
-        {job.salary && (
-          <Badge variant="secondary" className="bg-white/5 font-normal text-muted-foreground">
-            <Banknote className="size-3 mr-1" /> {job.salary}
+        {job.jobTypes.slice(0, 1).map((t) => (
+          <Badge key={t} className="bg-blue-500/10 text-blue-400 border-blue-500/20 text-[10px] capitalize">
+            <Briefcase className="size-2.5 mr-1" /> {t}
           </Badge>
-        )}
-        <Badge variant="secondary" className="bg-white/5 font-normal text-muted-foreground">
-          <Briefcase className="size-3 mr-1" /> {job.employment_type}
-        </Badge>
+        ))}
+        <Badge className="bg-white/5 text-muted-foreground text-[10px]">{job.source}</Badge>
       </div>
 
-      {job.skills && job.skills.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-1.5">
-          {job.skills.slice(0, 4).map((s, i) => (
-            <span
-              key={i}
-              className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full border border-white/10 text-muted-foreground"
-            >
-              {s}
-            </span>
-          ))}
-          {job.skills.length > 4 && (
-            <span className="text-[10px] text-muted-foreground">+{job.skills.length - 4}</span>
-          )}
-        </div>
-      )}
+      {/* Tags */}
+      <div className="mt-2 flex flex-wrap gap-1">
+        {job.tags.slice(0, 4).map((t) => (
+          <span key={t} className="text-[10px] px-2 py-0.5 rounded-full bg-primary/5 text-muted-foreground border border-white/5 capitalize">{t}</span>
+        ))}
+        {job.tags.length > 4 && <span className="text-[10px] text-muted-foreground">+{job.tags.length - 4}</span>}
+      </div>
 
-      <div className="mt-auto pt-5 flex items-center justify-between">
-        <span className="text-xs text-muted-foreground flex items-center gap-1">
-          <Calendar className="size-3" />{" "}
-          {formatDistanceToNow(new Date(job.posted_at), { addSuffix: true })}
+      {/* Footer */}
+      <div className="mt-auto pt-4 flex items-center justify-between">
+        <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+          <Calendar className="size-3" /> {formatDistanceToNow(job.postedAt, { addSuffix: true })}
         </span>
-        <Button variant="hero" size="sm" className="h-8 text-xs" asChild>
-          <a href={job.apply_url} target="_blank" rel="noopener noreferrer">
-            Apply <ExternalLink className="size-3 ml-1" />
-          </a>
-        </Button>
+        <span className="text-xs text-primary font-semibold flex items-center gap-1">
+          View details <ChevronRight className="size-3" />
+        </span>
       </div>
     </div>
   );
 }
 
-function DashboardTab({ user, savedJobsSet }: { user: any; savedJobsSet: Set<string> }) {
-  const { data: savedJobsList, isLoading } = useQuery({
-    queryKey: ["saved_jobs_details", Array.from(savedJobsSet)],
-    enabled: savedJobsSet.size > 0,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("jobs")
-        .select("*")
-        .in("id", Array.from(savedJobsSet));
-      if (error) throw error;
-      return data as Job[];
-    },
-  });
-
-  if (isLoading)
-    return (
-      <div className="py-16 text-center">
-        <Loader2 className="size-6 animate-spin mx-auto text-primary" />
-      </div>
-    );
-
+/* ──────────────────────── JOB DETAIL PANEL ──── */
+function JobDetailPanel({ job, isSaved, onSave, onClose, mobile }: {
+  job: LiveJob; isSaved: boolean; onSave: () => void; onClose: () => void; mobile?: boolean;
+}) {
   return (
-    <div className="space-y-8">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="glass-card p-5 rounded-2xl text-center">
-          <h4 className="text-muted-foreground text-sm">Saved Jobs</h4>
-          <p className="text-3xl font-bold mt-2">{savedJobsSet.size}</p>
+    <div className={cn(
+      "glass-card border border-primary/20 rounded-2xl overflow-y-auto",
+      mobile ? "min-h-screen p-5" : "w-full lg:w-[42%] sticky top-24 max-h-[calc(100vh-6rem)]",
+    )}>
+      {/* Top bar */}
+      <div className="flex items-start justify-between gap-3 p-5 border-b border-white/5">
+        <div className="flex gap-3 items-start">
+          <div className="size-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 grid place-items-center font-bold text-lg text-primary shrink-0">
+            {job.company.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <h2 className="font-bold text-base leading-tight">{job.title}</h2>
+            <p className="text-sm text-muted-foreground mt-0.5">{job.company}</p>
+          </div>
         </div>
-        <div className="glass-card p-5 rounded-2xl text-center">
-          <h4 className="text-muted-foreground text-sm">Applications</h4>
-          <p className="text-3xl font-bold mt-2">0</p>
-          <p className="text-xs text-muted-foreground mt-1">Tracked via external links</p>
-        </div>
+        <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
+          <X className="size-5" />
+        </button>
       </div>
 
-      <div>
-        <h3 className="font-bold text-xl mb-4">Your Saved Jobs</h3>
-        {savedJobsSet.size === 0 ? (
-          <div className="glass-card p-8 rounded-2xl text-center">
-            <Bookmark className="size-8 mx-auto text-muted-foreground mb-3 opacity-50" />
-            <p className="text-muted-foreground">You haven't saved any jobs yet.</p>
-          </div>
-        ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {savedJobsList?.map((j) => (
-              <JobCard key={j.id} job={j} isSaved={true} onSave={() => {}} />
+      <div className="p-5 space-y-5">
+        {/* Quick Meta */}
+        <div className="flex flex-wrap gap-2">
+          {job.remote && (
+            <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 font-semibold flex items-center gap-1">
+              <Globe2 className="size-3" /> Remote
+            </span>
+          )}
+          {job.location && (
+            <span className="text-xs px-2.5 py-1 rounded-full bg-white/5 text-muted-foreground border border-white/10 flex items-center gap-1">
+              <MapPin className="size-3" /> {job.location}
+            </span>
+          )}
+          {job.jobTypes.map((t) => (
+            <span key={t} className="text-xs px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 capitalize flex items-center gap-1">
+              <Briefcase className="size-3" /> {t}
+            </span>
+          ))}
+        </div>
+
+        {/* Tags / Skills */}
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1">
+            <Tag className="size-3" /> Skills & Tags
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {job.tags.map((t) => (
+              <span key={t} className="text-xs px-2.5 py-1 rounded-full bg-primary/8 text-primary border border-primary/15 capitalize font-medium">
+                {t}
+              </span>
             ))}
           </div>
-        )}
+        </div>
+
+        {/* Description */}
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Job Description</p>
+          <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line line-clamp-[20]">
+            {job.description.slice(0, 1800)}{job.description.length > 1800 ? "…" : ""}
+          </p>
+        </div>
+
+        {/* Posted + Source */}
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span className="flex items-center gap-1"><Calendar className="size-3" /> Posted {formatDistanceToNow(job.postedAt, { addSuffix: true })}</span>
+          <span>Source: {job.source}</span>
+        </div>
+
+        {/* CTA */}
+        <div className="flex gap-3 pt-2">
+          <Button
+            onClick={onSave}
+            variant="outline"
+            className={cn("flex-1", isSaved && "border-primary/40 text-primary")}
+          >
+            {isSaved ? <><BookmarkCheck className="size-4" /> Saved</> : <><Bookmark className="size-4" /> Save Job</>}
+          </Button>
+          <Button variant="hero" className="flex-1" asChild>
+            <a href={job.applyUrl} target="_blank" rel="noopener noreferrer">
+              Apply Now <ExternalLink className="size-4 ml-1" />
+            </a>
+          </Button>
+        </div>
       </div>
     </div>
   );
