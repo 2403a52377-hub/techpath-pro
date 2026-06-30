@@ -14,10 +14,13 @@ import {
   ArrowRight,
   Loader2,
   Activity,
+  Camera,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import {
   Area,
   AreaChart,
@@ -37,10 +40,51 @@ type ProgressRow = {
 };
 
 function Dashboard() {
-  const { user } = useAuth();
+  const { user, update } = useAuth();
   const [rows, setRows] = useState<ProgressRow[] | null>(null);
   const [resumeScore, setResumeScore] = useState<number | null>(null);
   const [weekly, setWeekly] = useState<{ day: string; xp: number }[]>([]);
+  const [photoModal, setPhotoModal] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Photo size must be less than 2MB");
+      return;
+    }
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result as string;
+      const res = await update({ avatarUrl: base64 });
+      setUploading(false);
+      if (res.error) {
+        toast.error(res.error);
+      } else {
+        toast.success("Profile photo updated successfully!");
+        setPhotoModal(false);
+      }
+    };
+    reader.onerror = () => {
+      setUploading(false);
+      toast.error("Failed to read file");
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function handleRemovePhoto() {
+    setUploading(true);
+    const res = await update({ avatarUrl: null });
+    setUploading(false);
+    if (res.error) {
+      toast.error(res.error);
+    } else {
+      toast.success("Profile photo removed.");
+      setPhotoModal(false);
+    }
+  }
 
   useEffect(() => {
     if (!user) return;
@@ -98,26 +142,60 @@ function Dashboard() {
           <img src="/logo.png" alt="TechLand Watermark" className="w-[450px] max-w-full object-contain" />
         </div>
 
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-hero p-8 lg:p-10 shadow-elegant mb-8">
-        <div className="absolute -top-20 -right-20 size-72 rounded-full bg-accent/40 blur-3xl" />
-        <div className="relative text-primary-foreground">
-          <p className="text-sm uppercase tracking-widest opacity-80">Welcome back</p>
-          <h1 className="mt-1 text-3xl lg:text-4xl font-bold">
-            Hey {user.fullName.split(" ")[0]} 👋
-          </h1>
-          <p className="mt-2 opacity-90">
-            {user.college} • {user.branch} • {user.year}
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <span className="px-3 py-1.5 rounded-full bg-background/15 backdrop-blur text-sm">
-              Domain: <b>{user.domain}</b>
-            </span>
-            <span className="px-3 py-1.5 rounded-full bg-background/15 backdrop-blur text-sm">
-              Level: <b>{user.level}</b>
-            </span>
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-hero p-8 lg:p-10 shadow-elegant mb-8 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="absolute -top-20 -right-20 size-72 rounded-full bg-accent/40 blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 size-72 rounded-full bg-primary/40 blur-3xl" />
+          
+          <div className="relative text-primary-foreground flex-1 space-y-4">
+            <div>
+              <p className="text-xs uppercase tracking-widest opacity-80 font-bold">Welcome back</p>
+              <h1 className="mt-1 text-3xl lg:text-4xl font-extrabold tracking-tight">
+                Hey {user.fullName.split(" ")[0]} 👋
+              </h1>
+              <p className="mt-2 opacity-90 text-sm font-medium">
+                {user.college} • {user.branch} • {user.year}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 pt-2">
+              <span className="px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-xs font-semibold border border-white/15">
+                Domain: <b>{user.domain}</b>
+              </span>
+              <span className="px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-xs font-semibold border border-white/15">
+                Level: <b>{user.level}</b>
+              </span>
+            </div>
           </div>
-        </div>
-      </section>
+
+          {/* Interactive Profile Photo Card */}
+          <div className="relative glass-card border border-white/15 bg-white/5 backdrop-blur-lg rounded-2xl p-5 w-full md:w-auto md:min-w-[280px] flex items-center gap-4 hover:border-white/25 transition-all shadow-glow">
+            <div className="relative shrink-0">
+              <div className="size-16 rounded-full overflow-hidden bg-gradient-accent grid place-items-center text-accent-foreground text-2xl font-bold border-2 border-white/20">
+                {user.avatarUrl ? (
+                  <img src={user.avatarUrl} alt="Avatar" className="size-full object-cover" />
+                ) : (
+                  user.fullName.charAt(0).toUpperCase()
+                )}
+              </div>
+              <button 
+                onClick={() => setPhotoModal(true)} 
+                className="absolute -bottom-1 -right-1 size-6 rounded-full bg-primary text-primary-foreground border border-white/20 grid place-items-center shadow-lg hover:scale-110 transition-transform"
+                title="Update Profile Photo"
+              >
+                <Camera className="size-3.5" />
+              </button>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-bold truncate text-sm text-white">{user.fullName}</p>
+              <p className="text-xs text-white/70 truncate mt-0.5">{user.branch}</p>
+              <button 
+                onClick={() => setPhotoModal(true)} 
+                className="text-[11px] text-primary-foreground font-semibold hover:underline mt-2 flex items-center gap-1 bg-white/10 px-2 py-1 rounded-md border border-white/10"
+              >
+                Update Photo
+              </button>
+            </div>
+          </div>
+        </section>
 
       <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
@@ -307,6 +385,57 @@ function Dashboard() {
           />
         </div>
       </section>
+
+      {/* Photo Upload Modal */}
+      {photoModal && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur flex items-center justify-center p-4">
+          <div className="glass-card rounded-2xl border border-primary/20 w-full max-w-sm overflow-hidden p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <h3 className="font-bold text-lg text-foreground">Update Profile Photo</h3>
+              <button onClick={() => setPhotoModal(false)} className="text-muted-foreground hover:text-foreground">
+                <X className="size-5" />
+              </button>
+            </div>
+
+            <div className="flex flex-col items-center gap-3 py-4">
+              <div className="size-24 rounded-full overflow-hidden bg-gradient-primary grid place-items-center text-primary-foreground text-3xl font-bold border-2 border-primary/30 shadow-md relative">
+                {user.avatarUrl ? (
+                  <img src={user.avatarUrl} alt="Avatar" className="size-full object-cover" />
+                ) : (
+                  user.fullName.charAt(0).toUpperCase()
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground text-center">Upload a personal photo or profile image (PNG, JPG, max 2MB).</p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="w-full">
+                <span className="w-full flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-primary text-primary-foreground font-semibold text-sm cursor-pointer hover:opacity-90 transition-opacity">
+                  {uploading ? <Loader2 className="size-4 animate-spin" /> : <Camera className="size-4" />}
+                  Upload Photo
+                </span>
+                <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" disabled={uploading} />
+              </label>
+              
+              {user.avatarUrl && (
+                <Button 
+                  variant="outline" 
+                  className="w-full text-rose-400 hover:text-rose-300 border-rose-500/20 hover:bg-rose-500/5 h-10 rounded-xl" 
+                  onClick={handleRemovePhoto} 
+                  disabled={uploading}
+                >
+                  Remove Photo
+                </Button>
+              )}
+              
+              <Button variant="ghost" className="w-full h-10 rounded-xl" onClick={() => setPhotoModal(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       </div>
     </AppShell>
   );
