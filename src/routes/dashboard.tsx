@@ -92,7 +92,13 @@ function Dashboard() {
 
   return (
     <AppShell>
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-hero p-8 lg:p-10 shadow-elegant mb-8">
+      <div className="relative">
+        {/* Faint Logo Watermark in Light Background */}
+        <div className="absolute top-[35%] left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 opacity-[0.035] pointer-events-none select-none max-w-full overflow-hidden">
+          <img src="/logo.png" alt="TechLand Watermark" className="w-[450px] max-w-full object-contain" />
+        </div>
+
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-hero p-8 lg:p-10 shadow-elegant mb-8">
         <div className="absolute -top-20 -right-20 size-72 rounded-full bg-accent/40 blur-3xl" />
         <div className="relative text-primary-foreground">
           <p className="text-sm uppercase tracking-widest opacity-80">Welcome back</p>
@@ -301,6 +307,7 @@ function Dashboard() {
           />
         </div>
       </section>
+      </div>
     </AppShell>
   );
 }

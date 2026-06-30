@@ -70,9 +70,7 @@ function Landing() {
       <nav className="sticky top-0 z-50 backdrop-blur-xl bg-background/70 border-b border-border/60">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <div className="size-9 rounded-xl bg-gradient-primary grid place-items-center text-primary-foreground font-bold shadow-glow">
-              T
-            </div>
+            <img src="/logo.png" alt="TechLand Logo" className="size-9 object-contain" />
             <span className="text-xl font-bold gradient-text">TechLand</span>
           </Link>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
