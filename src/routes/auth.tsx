@@ -41,8 +41,11 @@ function AuthPage() {
       <div className="hidden lg:flex relative overflow-hidden bg-gradient-hero p-12 flex-col justify-between">
         <div className="absolute -top-32 -right-32 size-96 rounded-full bg-accent/40 blur-3xl" />
         <div className="absolute -bottom-32 -left-32 size-96 rounded-full bg-secondary/40 blur-3xl" />
-        <Link to="/" className="relative flex items-center">
-          <img src="/logo.png" alt="TechLand Logo" className="h-14 w-auto object-contain brightness-[1.8]" />
+        <Link to="/" className="relative flex items-center gap-3 text-primary-foreground">
+          <div className="bg-white p-1 rounded-xl size-10 flex items-center justify-center shrink-0 shadow-md">
+            <img src="/logo.png" alt="TechLand Logo" className="size-full object-contain" />
+          </div>
+          <span className="text-xl font-bold">TechLand</span>
         </Link>
         <div className="relative text-primary-foreground">
           <Sparkles className="size-8 mb-4" />
@@ -111,7 +114,21 @@ function LoginForm() {
           toast.error(res.error);
         } else {
           toast.success("Welcome back!");
-          navigate({ to: "/dashboard" });
+          const { data: sessionData } = await supabase.auth.getSession();
+          const userId = sessionData.session?.user?.id;
+          if (userId) {
+            const { data: roleRow } = await supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle();
+            const role = roleRow?.role ?? "student";
+            if (role === "admin") {
+              navigate({ to: "/admin" });
+            } else if (role === "mentor") {
+              navigate({ to: "/mentor" });
+            } else {
+              navigate({ to: "/dashboard" });
+            }
+          } else {
+            navigate({ to: "/dashboard" });
+          }
         }
       }}
       className="space-y-5"

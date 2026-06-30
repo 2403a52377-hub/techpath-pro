@@ -33,6 +33,7 @@ export interface Profile {
   streak: number;
   joinedAt: string;
   avatarUrl?: string | null;
+  role: "student" | "mentor" | "admin";
 }
 
 export interface SignupInput {
@@ -61,7 +62,7 @@ interface AuthCtx {
 
 const Ctx = createContext<AuthCtx | null>(null);
 
-function rowToProfile(row: any, fallbackUser: SupabaseUser | null): Profile {
+function rowToProfile(row: any, fallbackUser: SupabaseUser | null, role: "student" | "mentor" | "admin" = "student"): Profile {
   return {
     id: row?.id ?? fallbackUser?.id ?? "",
     fullName: row?.full_name ?? fallbackUser?.user_metadata?.full_name ?? "",
@@ -75,6 +76,7 @@ function rowToProfile(row: any, fallbackUser: SupabaseUser | null): Profile {
     streak: row?.streak ?? 0,
     joinedAt: row?.created_at ?? new Date().toISOString(),
     avatarUrl: row?.avatar_url ?? null,
+    role,
   };
 }
 
@@ -88,8 +90,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       return;
     }
-    const { data } = await supabase.from("profiles").select("*").eq("id", u.id).maybeSingle();
-    setUser(rowToProfile(data, u));
+    const [profileRes, roleRes] = await Promise.all([
+      supabase.from("profiles").select("*").eq("id", u.id).maybeSingle(),
+      supabase.from("user_roles").select("role").eq("user_id", u.id).maybeSingle(),
+    ]);
+    const role = (roleRes.data?.role as "student" | "mentor" | "admin") ?? "student";
+    setUser(rowToProfile(profileRes.data, u, role));
   }
 
   useEffect(() => {

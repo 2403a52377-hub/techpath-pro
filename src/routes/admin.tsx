@@ -45,11 +45,17 @@ function AdminPage() {
   });
 
   useEffect(() => {
-    if (loading || !user) return;
+    if (loading) return;
+    if (!user) {
+      router.navigate({ to: "/auth", search: { tab: "login" } });
+      return;
+    }
     (async () => {
       const { data, error } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
       if (error || !data) {
         setIsAdmin(false);
+        toast.error("Access Denied: Admin role required");
+        router.navigate({ to: "/dashboard" });
         return;
       }
       setIsAdmin(true);

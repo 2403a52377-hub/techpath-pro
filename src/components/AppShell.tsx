@@ -85,8 +85,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <div className="flex h-16 items-center px-4 border-b border-border/60 justify-start">
-          <img src="/logo.png" alt="TechLand Logo" className="h-14 w-auto object-contain" />
+        <div className="flex h-16 items-center gap-3 px-5 border-b border-border/60 justify-start">
+          <div className="bg-white p-1 rounded-xl size-10 flex items-center justify-center shrink-0 shadow-md">
+            <img src="/logo.png" alt="TechLand Logo" className="size-full object-contain" />
+          </div>
+          <span className="text-xl font-bold gradient-text">TechLand</span>
         </div>
         <nav className="p-3 space-y-1 overflow-y-auto h-[calc(100vh-4rem-5rem)]">
           {NAV.map((item) => {
