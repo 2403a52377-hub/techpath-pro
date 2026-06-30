@@ -41,9 +41,8 @@ function AuthPage() {
       <div className="hidden lg:flex relative overflow-hidden bg-gradient-hero p-12 flex-col justify-between">
         <div className="absolute -top-32 -right-32 size-96 rounded-full bg-accent/40 blur-3xl" />
         <div className="absolute -bottom-32 -left-32 size-96 rounded-full bg-secondary/40 blur-3xl" />
-        <Link to="/" className="relative flex items-center gap-2 text-primary-foreground">
-          <img src="/logo.png" alt="TechLand Logo" className="size-9 object-contain" />
-          <span className="text-xl font-bold">TechLand</span>
+        <Link to="/" className="relative flex items-center">
+          <img src="/logo.png" alt="TechLand Logo" className="h-14 w-auto object-contain brightness-[1.8]" />
         </Link>
         <div className="relative text-primary-foreground">
           <Sparkles className="size-8 mb-4" />

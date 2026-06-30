@@ -94,7 +94,7 @@ function Dashboard() {
     <AppShell>
       <div className="relative">
         {/* Faint Logo Watermark in Light Background */}
-        <div className="absolute top-[35%] left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 opacity-[0.035] pointer-events-none select-none max-w-full overflow-hidden">
+        <div className="absolute top-[35%] left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 opacity-[0.09] pointer-events-none select-none max-w-full overflow-hidden">
           <img src="/logo.png" alt="TechLand Watermark" className="w-[450px] max-w-full object-contain" />
         </div>
 

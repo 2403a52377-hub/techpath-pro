@@ -46,8 +46,39 @@ const TAG_COLORS: Record<string, string> = {
 type FeedbackType = "suggestion" | "experience" | "complaint";
 type FeedbackEntry = {
   type: FeedbackType; rating?: number; title: string; message: string;
-  name: string; email: string; submittedAt: string; status: "submitted";
+  name: string; email: string; submittedAt: string; status: "submitted" | "in-progress" | "fixed" | "published";
 };
+
+const SEEDED_FEEDBACK: FeedbackEntry[] = [
+  {
+    type: "suggestion",
+    title: "Need Dark Mode toggle on Dashboard",
+    message: "A dark theme for the main dashboard would be really helpful for night study sessions. The rest of the app looks great!",
+    name: "Aman Gupta",
+    email: "aman@vit.edu",
+    submittedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    status: "in-progress",
+  },
+  {
+    type: "experience",
+    rating: 5,
+    title: "Cleared Amazon SDE-1 Placement!",
+    message: "The AI mock interview was key for me. Practiced daily for 2 weeks. The system design questions were very similar to what Amazon asked in round 1.",
+    name: "Sneha Reddy",
+    email: "sneha.r@iitd.ac.in",
+    submittedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    status: "published",
+  },
+  {
+    type: "complaint",
+    title: "Mock test options not loading properly",
+    message: "Fixed: Before, mock tests options were not properly enabled or active for some streams, but it is now corrected.",
+    name: "Rohan V.",
+    email: "rohanv@bits.edu",
+    submittedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    status: "fixed",
+  }
+];
 
 const FEEDBACK_CONFIG: Record<FeedbackType, { label: string; icon: typeof Lightbulb; color: string; placeholder: string }> = {
   suggestion: { label: "Suggestion", icon: Lightbulb, color: "bg-yellow-500/15 text-yellow-400 border-yellow-500/20", placeholder: "What feature or improvement would you like to see on TechPath Pro?" },
@@ -88,7 +119,7 @@ function Community() {
   const [fbBusy, setFbBusy] = useState(false);
 
   /* Past feedback */
-  const [myFeedback] = useState<FeedbackEntry[]>(() => {
+  const [myFeedback, setMyFeedback] = useState<FeedbackEntry[]>(() => {
     try { return JSON.parse(localStorage.getItem("myFeedback") ?? "[]"); }
     catch { return []; }
   });
@@ -156,6 +187,7 @@ function Community() {
       const existing = JSON.parse(localStorage.getItem("myFeedback") ?? "[]");
       existing.push(entry);
       localStorage.setItem("myFeedback", JSON.stringify(existing));
+      setMyFeedback(existing);
       setFbBusy(false);
       setFbDone(true);
       toast.success("Feedback submitted! Thank you 🙏");
@@ -314,8 +346,14 @@ function Community() {
       )}
 
       {/* ── SUGGESTION BOX TAB ── */}
-      {tab === "feedback" && (
-        <div className="mt-6 grid lg:grid-cols-2 gap-6">
+      {tab === "feedback" && (() => {
+        const combinedFeedback: FeedbackEntry[] = [
+          ...SEEDED_FEEDBACK,
+          ...myFeedback
+        ].sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+
+        return (
+          <div className="mt-6 grid lg:grid-cols-2 gap-6">
           {/* Form */}
           <div>
             <div className="glass-card rounded-2xl border border-white/5 overflow-hidden">
@@ -422,30 +460,53 @@ function Community() {
               </ul>
             </div>
 
-            {/* Past feedback */}
-            {myFeedback.length > 0 && (
-              <div className="glass-card rounded-2xl p-5">
-                <h3 className="font-bold mb-3 flex items-center gap-2"><CheckCircle2 className="size-4 text-emerald-400" /> Your Submissions</h3>
-                <div className="space-y-3">
-                  {myFeedback.slice(-5).reverse().map((f, i) => {
-                    const cfg = FEEDBACK_CONFIG[f.type];
-                    const Icon = cfg.icon;
-                    return (
-                      <div key={i} className={cn("p-3 rounded-xl border text-xs", cfg.color)}>
-                        <div className="flex items-center gap-2 mb-1">
-                          <Icon className="size-3.5" />
-                          <span className="font-semibold">{cfg.label}</span>
-                          <span className="ml-auto text-muted-foreground">{formatDistanceToNow(new Date(f.submittedAt), { addSuffix: true })}</span>
-                        </div>
-                        <p className="font-medium">{f.title}</p>
-                        <p className="text-muted-foreground mt-0.5 line-clamp-2">{f.message}</p>
-                        <span className="mt-1.5 inline-flex items-center gap-1 text-emerald-400 font-semibold"><CheckCircle2 className="size-3" />Submitted</span>
+            {/* Suggestions & Action Feed */}
+            <div className="glass-card rounded-2xl p-5 border border-white/5">
+              <h3 className="font-bold mb-3 flex items-center gap-2">
+                <Lightbulb className="size-4 text-yellow-400" /> Suggestions & Action Feed
+              </h3>
+              <p className="text-xs text-muted-foreground mb-3">See what the community is suggesting and how we are responding in real-time.</p>
+              <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+                {combinedFeedback.map((f, i) => {
+                  const cfg = FEEDBACK_CONFIG[f.type];
+                  const Icon = cfg?.icon ?? Lightbulb;
+                  return (
+                    <div key={i} className="p-3 rounded-xl border border-white/5 bg-white/3 text-xs space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Icon className="size-3.5 text-primary" />
+                        <span className="font-semibold text-foreground capitalize">{f.type}</span>
+                        <span className="text-[10px] text-muted-foreground ml-auto">
+                          {formatDistanceToNow(new Date(f.submittedAt), { addSuffix: true })}
+                        </span>
                       </div>
-                    );
-                  })}
-                </div>
+                      <p className="font-semibold text-sm text-foreground">{f.title}</p>
+                      <p className="text-muted-foreground leading-relaxed">{f.message}</p>
+                      
+                      {f.type === "experience" && f.rating && (
+                        <div className="flex gap-0.5 my-1">
+                          {Array.from({ length: 5 }).map((_, idx) => (
+                            <Star key={idx} className={cn("size-3", idx < f.rating ? "text-yellow-400 fill-yellow-400" : "text-muted-foreground")} />
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between pt-1 border-t border-white/5 mt-1.5">
+                        <span className="text-[10px] text-muted-foreground">Submitted by {f.name}</span>
+                        {f.status === "fixed" ? (
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-semibold text-[9px] border border-emerald-500/20">✅ Fixed</span>
+                        ) : f.status === "in-progress" ? (
+                          <span className="px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 font-semibold text-[9px] border border-yellow-500/20">⚡ In Progress</span>
+                        ) : f.status === "published" ? (
+                          <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 font-semibold text-[9px] border border-blue-500/20">📢 Featured</span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full bg-white/5 text-muted-foreground font-semibold text-[9px] border border-white/10">📨 Under Review</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            )}
+            </div>
 
             {/* Platform Stats */}
             <div className="glass-card rounded-2xl p-5">
@@ -466,7 +527,8 @@ function Community() {
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
     </AppShell>
   );
 }
