@@ -14,6 +14,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as PlacementRouteImport } from './routes/placement'
 import { Route as MentorsRouteImport } from './routes/mentors'
+import { Route as MentorRouteImport } from './routes/mentor'
 import { Route as LearnRouteImport } from './routes/learn'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as JobsRouteImport } from './routes/jobs'
@@ -55,6 +56,11 @@ const PlacementRoute = PlacementRouteImport.update({
 const MentorsRoute = MentorsRouteImport.update({
   id: '/mentors',
   path: '/mentors',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MentorRoute = MentorRouteImport.update({
+  id: '/mentor',
+  path: '/mentor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LearnRoute = LearnRouteImport.update({
@@ -156,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/jobs': typeof JobsRoute
   '/leaderboard': typeof LeaderboardRoute
   '/learn': typeof LearnRoute
+  '/mentor': typeof MentorRoute
   '/mentors': typeof MentorsRoute
   '/placement': typeof PlacementRoute
   '/projects': typeof ProjectsRoute
@@ -180,6 +187,7 @@ export interface FileRoutesByTo {
   '/jobs': typeof JobsRoute
   '/leaderboard': typeof LeaderboardRoute
   '/learn': typeof LearnRoute
+  '/mentor': typeof MentorRoute
   '/mentors': typeof MentorsRoute
   '/placement': typeof PlacementRoute
   '/projects': typeof ProjectsRoute
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/jobs': typeof JobsRoute
   '/leaderboard': typeof LeaderboardRoute
   '/learn': typeof LearnRoute
+  '/mentor': typeof MentorRoute
   '/mentors': typeof MentorsRoute
   '/placement': typeof PlacementRoute
   '/projects': typeof ProjectsRoute
@@ -231,6 +240,7 @@ export interface FileRouteTypes {
     | '/jobs'
     | '/leaderboard'
     | '/learn'
+    | '/mentor'
     | '/mentors'
     | '/placement'
     | '/projects'
@@ -255,6 +265,7 @@ export interface FileRouteTypes {
     | '/jobs'
     | '/leaderboard'
     | '/learn'
+    | '/mentor'
     | '/mentors'
     | '/placement'
     | '/projects'
@@ -279,6 +290,7 @@ export interface FileRouteTypes {
     | '/jobs'
     | '/leaderboard'
     | '/learn'
+    | '/mentor'
     | '/mentors'
     | '/placement'
     | '/projects'
@@ -304,6 +316,7 @@ export interface RootRouteChildren {
   JobsRoute: typeof JobsRoute
   LeaderboardRoute: typeof LeaderboardRoute
   LearnRoute: typeof LearnRoute
+  MentorRoute: typeof MentorRoute
   MentorsRoute: typeof MentorsRoute
   PlacementRoute: typeof PlacementRoute
   ProjectsRoute: typeof ProjectsRoute
@@ -351,6 +364,13 @@ declare module '@tanstack/react-router' {
       path: '/mentors'
       fullPath: '/mentors'
       preLoaderRoute: typeof MentorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mentor': {
+      id: '/mentor'
+      path: '/mentor'
+      fullPath: '/mentor'
+      preLoaderRoute: typeof MentorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/learn': {
@@ -488,6 +508,7 @@ const rootRouteChildren: RootRouteChildren = {
   JobsRoute: JobsRoute,
   LeaderboardRoute: LeaderboardRoute,
   LearnRoute: LearnRoute,
+  MentorRoute: MentorRoute,
   MentorsRoute: MentorsRoute,
   PlacementRoute: PlacementRoute,
   ProjectsRoute: ProjectsRoute,

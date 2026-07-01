@@ -482,11 +482,14 @@ function Community() {
                       <p className="font-semibold text-sm text-foreground">{f.title}</p>
                       <p className="text-muted-foreground leading-relaxed">{f.message}</p>
                       
-                      {f.type === "experience" && f.rating && (
+                      {f.type === "experience" && f.rating !== undefined && (
                         <div className="flex gap-0.5 my-1">
-                          {Array.from({ length: 5 }).map((_, idx) => (
-                            <Star key={idx} className={cn("size-3", idx < f.rating ? "text-yellow-400 fill-yellow-400" : "text-muted-foreground")} />
-                          ))}
+                          {(() => {
+                            const r = f.rating ?? 0;
+                            return Array.from({ length: 5 }).map((_, idx) => (
+                              <Star key={idx} className={cn("size-3", idx < r ? "text-yellow-400 fill-yellow-400" : "text-muted-foreground")} />
+                            ));
+                          })()}
                         </div>
                       )}
 
