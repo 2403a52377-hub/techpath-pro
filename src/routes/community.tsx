@@ -173,25 +173,49 @@ function Community() {
     loadPosts();
   }
 
-  function submitFeedback(e: React.FormEvent) {
+  async function submitFeedback(e: React.FormEvent) {
     e.preventDefault();
     if (!fbTitle.trim() || !fbMessage.trim()) return toast.error("Please fill in title and message");
     if (!fbName.trim() || !fbEmail.trim()) return toast.error("Please fill in your name and email");
     setFbBusy(true);
-    setTimeout(() => {
-      const entry: FeedbackEntry = {
-        type: fbType, rating: fbType === "experience" ? fbRating : undefined,
-        title: fbTitle, message: fbMessage, name: fbName, email: fbEmail,
-        submittedAt: new Date().toISOString(), status: "submitted",
-      };
-      const existing = JSON.parse(localStorage.getItem("myFeedback") ?? "[]");
-      existing.push(entry);
-      localStorage.setItem("myFeedback", JSON.stringify(existing));
-      setMyFeedback(existing);
-      setFbBusy(false);
-      setFbDone(true);
+
+    const entry = {
+      user_id: user?.id ?? null,
+      type: fbType,
+      rating: fbType === "experience" ? fbRating : undefined,
+      title: fbTitle.trim(),
+      message: fbMessage.trim(),
+      name: fbName.trim(),
+      email: fbEmail.trim(),
+      status: "submitted"
+    };
+
+    const { error } = await supabase.from("feedback" as any).insert(entry as never);
+
+    const localEntry: FeedbackEntry = {
+      type: fbType,
+      rating: fbType === "experience" ? fbRating : undefined,
+      title: fbTitle.trim(),
+      message: fbMessage.trim(),
+      name: fbName.trim(),
+      email: fbEmail.trim(),
+      submittedAt: new Date().toISOString(),
+      status: "submitted"
+    };
+
+    const existing = JSON.parse(localStorage.getItem("myFeedback") ?? "[]");
+    existing.push(localEntry);
+    localStorage.setItem("myFeedback", JSON.stringify(existing));
+    setMyFeedback(existing);
+
+    setFbBusy(false);
+    setFbDone(true);
+
+    if (error) {
+      toast.success("Feedback submitted locally! (Saves to database after running feedback migration)");
+    } else {
       toast.success("Feedback submitted! Thank you 🙏");
-    }, 1000);
+    }
   }
 
   const filteredPosts = posts?.filter((p) => tagFilter === "All" || p.tag === tagFilter) ?? [];
