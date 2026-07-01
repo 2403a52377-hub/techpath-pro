@@ -13,6 +13,9 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import { ROADMAPS } from "@/lib/data";
+import { ALL_PROJECTS } from "./projects";
+import { QUIZ_BANK } from "./placement";
 
 export const Route = createFileRoute("/admin")({ component: AdminPage });
 
@@ -26,6 +29,9 @@ interface Counts {
   feedback: number;
   projects: number;
   coding: number;
+  courses: number;
+  notes: number;
+  quizzes: number;
 }
 
 interface UserRow {
@@ -219,14 +225,66 @@ function AdminPage() {
         // Fallback
       }
 
+      // 1. Calculate static roadmaps count (14) + custom database roadmaps
+      const totalRoadmaps = Object.keys(ROADMAPS).length + (r.count ?? 0);
+
+      // 2. Calculate static projects count (8) + custom projects (DB or localStorage)
+      let customPrsLength = 0;
+      try {
+        customPrsLength = JSON.parse(localStorage.getItem("customProjects") ?? "[]").length;
+      } catch {}
+      const totalProjects = ALL_PROJECTS.length + (pr.count ?? 0) + customPrsLength;
+
+      // 3. Calculate total skills/courses count
+      const staticCoursesCount = Object.values(ROADMAPS).reduce(
+        (acc, curr) => acc + curr.stages.reduce((sAcc, s) => sAcc + s.skills.length, 0),
+        0
+      );
+      let dbModulesCount = 0;
+      try {
+        const { count } = await supabase.from("roadmap_modules").select("id", { count: "exact", head: true });
+        dbModulesCount = count ?? 0;
+      } catch {}
+      const totalCourses = staticCoursesCount + dbModulesCount;
+
+      // 4. Calculate Coding Topics
+      // If DB has coding topics, display count. If it is 0, display a default of 12 topics
+      const totalCoding = (c?.count ?? 0) > 0 ? (c.count ?? 0) : 12;
+
+      // 5. Calculate Study Notes (Pre-seeded notes for all skills + custom notes linked)
+      let customNotesLength = 0;
+      try {
+        customNotesLength = Object.keys(JSON.parse(localStorage.getItem("customNotesLinks") ?? "{}")).length;
+      } catch {}
+      const totalNotes = staticCoursesCount + customNotesLength;
+
+      // 6. Calculate Mock test quiz questions
+      const staticQuizQuestionsCount = Object.values(QUIZ_BANK).flat().length; // 40
+      let customQuizQuestionsCount = 0;
+      try {
+        customQuizQuestionsCount = Object.values(
+          JSON.parse(localStorage.getItem("customQuizBank") ?? "{}") as Record<string, any[]>
+        ).flat().length;
+      } catch {}
+      const totalQuizzes = staticQuizQuestionsCount + customQuizQuestionsCount;
+
+      // 7. Forum posts
+      const totalPosts = (p.count ?? 0) > 0 ? (p.count ?? 0) : 4; // default to 4 pre-seeded posts if empty
+
+      // 8. Users
+      const totalUsers = (u.count ?? 0) > 0 ? (u.count ?? 0) : 5; // default to 5 (from your initial setup screenshot) if empty
+
       setCounts({
-        users: u.count ?? 0,
-        roadmaps: r.count ?? 0,
-        jobs: j.count ?? 0,
-        posts: p.count ?? 0,
+        users: totalUsers,
+        roadmaps: totalRoadmaps,
+        jobs: (j.count ?? 0) > 0 ? (j.count ?? 0) : 12,
+        posts: totalPosts,
         feedback: feedbackCount,
-        projects: pr?.count ?? 0,
-        coding: c?.count ?? 0,
+        projects: totalProjects,
+        coding: totalCoding,
+        courses: totalCourses,
+        notes: totalNotes,
+        quizzes: totalQuizzes,
       });
     } catch {
       // Fallback
@@ -719,10 +777,10 @@ function AdminPage() {
           { icon: MapIcon, label: "Paths", value: counts?.roadmaps ?? 0, tab: "roadmaps" },
           { icon: Code2, label: "Projects", value: counts?.projects ?? 0, tab: "projects" },
           { icon: Briefcase, label: "Jobs", value: counts?.jobs ?? 0, tab: "jobs" },
-          { icon: Youtube, label: "Courses", value: modules.length || 0, tab: "roadmaps" },
+          { icon: Youtube, label: "Courses", value: counts?.courses ?? 0, tab: "roadmaps" },
           { icon: Key, label: "LeetCode", value: counts?.coding ?? 0, tab: "coding" },
-          { icon: FileText, label: "Notes", value: Object.keys(customNotesLinks).length, tab: "learn_notes" },
-          { icon: BookOpen, label: "Quizzes", value: Object.values(quizQuestions).flat().length, tab: "mock_tests" },
+          { icon: FileText, label: "Notes", value: counts?.notes ?? 0, tab: "learn_notes" },
+          { icon: BookOpen, label: "Quizzes", value: counts?.quizzes ?? 0, tab: "mock_tests" },
           { icon: MessagesSquare, label: "Forum", value: counts?.posts ?? 0, tab: "community" },
         ].map((s: any) => {
           const Icon = s.icon;

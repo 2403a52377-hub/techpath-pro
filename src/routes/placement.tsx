@@ -41,7 +41,7 @@ type QuizQuestion = {
   explanation: string;
 };
 
-const QUIZ_BANK: Record<string, QuizQuestion[]> = {
+export const QUIZ_BANK: Record<string, QuizQuestion[]> = {
   "Quantitative Aptitude": [
     {
       q: "If 20% of a number is 40, what is 35% of that number?",

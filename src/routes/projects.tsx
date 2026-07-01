@@ -32,7 +32,7 @@ type Project = {
 };
 
 /* ─────────────────────── DATA ──── */
-const ALL_PROJECTS: Project[] = [
+export const ALL_PROJECTS: Project[] = [
   {
     title: "Personal Portfolio Website",
     duration: "1 week", level: "Beginner",
