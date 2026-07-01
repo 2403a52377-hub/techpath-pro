@@ -10,6 +10,7 @@ import {
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/projects")({ component: Projects });
 
@@ -701,6 +702,55 @@ function ProjectCard({ p, defaultOpen }: { p: Project; defaultOpen?: boolean }) 
 /* ─────────────────────── MAIN PAGE ──── */
 function Projects() {
   const levels = ["Beginner", "Intermediate", "Advanced"] as const;
+  const [projectList, setProjectList] = useState<Project[]>(ALL_PROJECTS);
+
+  useEffect(() => {
+    (async () => {
+      // 1. Fetch custom projects from Supabase
+      const { data: dbProjects } = await supabase.from("projects" as any).select("*");
+      
+      // 2. Fetch custom projects from local storage fallback
+      let localProjects: any[] = [];
+      try {
+        localProjects = JSON.parse(localStorage.getItem("customProjects") ?? "[]");
+      } catch {
+        localProjects = [];
+      }
+
+      // Combine them
+      const customProjects: Project[] = [
+        ...(dbProjects ?? []).map((p: any) => ({
+          title: p.title,
+          duration: "2-3 weeks",
+          level: (p.difficulty === "Beginner" || p.difficulty === "Intermediate" || p.difficulty === "Advanced") ? p.difficulty : "Beginner",
+          skills: [
+            { name: p.domain_name.split(" ")[0], docsUrl: "#", color: "bg-primary/10 text-primary border-primary/20" }
+          ],
+          description: p.description,
+          whatYouLearn: ["Project structure & design", "Feature implementation", "Debugging & testing"],
+          steps: ["Scaffold project files", "Write core components", "Test features", "Deploy/Run locally"],
+          codeSnippet: `// Source code available at:\n// ${p.github_reference ?? "https://github.com"}`,
+          githubSearch: p.github_reference ?? "https://github.com/topics/project",
+          youtubeSearch: `https://www.youtube.com/results?search_query=${encodeURIComponent(p.title + " tutorial")}`,
+          stackblitzUrl: ""
+        })),
+        ...localProjects
+      ];
+
+      // Track deleted projects
+      let deletedTitles: string[] = [];
+      try {
+        deletedTitles = JSON.parse(localStorage.getItem("deletedProjects") ?? "[]");
+      } catch {
+        deletedTitles = [];
+      }
+
+      const combined = [...ALL_PROJECTS, ...customProjects].filter(
+        (p) => !deletedTitles.includes(p.title)
+      );
+      setProjectList(combined);
+    })();
+  }, []);
 
   return (
     <AppShell>
@@ -712,9 +762,9 @@ function Projects() {
       {/* Stats */}
       <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Projects", value: ALL_PROJECTS.length, icon: Code2 },
-          { label: "Code Snippets", value: ALL_PROJECTS.length, icon: BookOpen },
-          { label: "In-App Playground", value: ALL_PROJECTS.filter(p => p.stackblitzUrl).length, icon: Monitor },
+          { label: "Projects", value: projectList.length, icon: Code2 },
+          { label: "Code Snippets", value: projectList.length, icon: BookOpen },
+          { label: "In-App Playground", value: projectList.filter(p => p.stackblitzUrl).length, icon: Monitor },
           { label: "Difficulty Levels", value: 3, icon: Star },
         ].map((s) => {
           const Icon = s.icon;
@@ -737,7 +787,7 @@ function Projects() {
         {levels.map((level) => {
           const meta = LEVEL_COLORS[level];
           const LevelIcon = meta.icon;
-          const projects = ALL_PROJECTS.filter((p) => p.level === level);
+          const projects = projectList.filter((p) => p.level === level);
           return (
             <section key={level}>
               <div className="flex items-center gap-3 mb-4">

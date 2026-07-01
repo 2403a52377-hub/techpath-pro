@@ -332,7 +332,39 @@ function MockTestModule({ onBack }: { onBack: () => void }) {
   const [confirmed, setConfirmed] = useState(false);
   const [answers, setAnswers] = useState<(number | null)[]>([]);
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
-  const questions = QUIZ_BANK[selectedCategory] ?? [];
+  
+  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+  const [quizCategories, setQuizCategories] = useState<string[]>(Object.keys(QUIZ_BANK));
+
+  useEffect(() => {
+    try {
+      const baseQuestions = QUIZ_BANK[selectedCategory] ?? [];
+      const customQuizBank = JSON.parse(localStorage.getItem("customQuizBank") ?? "{}");
+      const customQuestions = customQuizBank[selectedCategory] ?? [];
+      setQuestions([...baseQuestions, ...customQuestions]);
+    } catch {
+      setQuestions(QUIZ_BANK[selectedCategory] ?? []);
+    }
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    try {
+      const customQuizBank = JSON.parse(localStorage.getItem("customQuizBank") ?? "{}");
+      const cats = Array.from(new Set([...Object.keys(QUIZ_BANK), ...Object.keys(customQuizBank)]));
+      setQuizCategories(cats);
+    } catch {}
+  }, []);
+
+  function getQuestionCount(cat: string) {
+    try {
+      const baseCount = QUIZ_BANK[cat]?.length ?? 0;
+      const customQuizBank = JSON.parse(localStorage.getItem("customQuizBank") ?? "{}");
+      const customCount = customQuizBank[cat]?.length ?? 0;
+      return baseCount + customCount;
+    } catch {
+      return QUIZ_BANK[cat]?.length ?? 0;
+    }
+  }
 
   useEffect(() => {
     if (state !== "running") return;
@@ -387,7 +419,7 @@ function MockTestModule({ onBack }: { onBack: () => void }) {
           <p className="text-sm text-muted-foreground mb-6">10 questions · 10 minutes · Instant scoring & explanations</p>
 
           <div className="space-y-3 mb-6">
-            {Object.keys(QUIZ_BANK).map((cat) => (
+            {quizCategories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
@@ -397,7 +429,7 @@ function MockTestModule({ onBack }: { onBack: () => void }) {
                 <div className={cn("size-4 rounded-full border-2 shrink-0", selectedCategory === cat ? "border-primary bg-primary" : "border-white/30")} />
                 <div>
                   <p className="font-bold">{cat}</p>
-                  <p className="text-xs text-muted-foreground">{QUIZ_BANK[cat].length} questions · 10 min</p>
+                  <p className="text-xs text-muted-foreground">{getQuestionCount(cat)} questions · 10 min</p>
                 </div>
                 {selectedCategory === cat && <CheckCircle2 className="size-5 text-primary ml-auto" />}
               </button>
