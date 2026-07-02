@@ -301,6 +301,12 @@ function AdminPage() {
           supabase.from("profiles").select("*").order("xp", { ascending: false }),
           supabase.from("user_roles").select("*"),
         ]);
+        if (profilesRes.error) {
+          toast.error("Profiles Table Error: " + profilesRes.error.message);
+        }
+        if (rolesRes.error) {
+          toast.error("Roles Table Error: " + rolesRes.error.message + ". If this table is missing, please run admin RLS migrations in Supabase SQL editor.");
+        }
         const rolesMap = new globalThis.Map((rolesRes.data ?? []).map((r: any) => [r.user_id, r.role]));
         setUsers(
           (profilesRes.data ?? []).map((p: any) => ({
@@ -316,20 +322,33 @@ function AdminPage() {
           }))
         );
       } else if (activeTab === "roadmaps") {
-        const { data } = await supabase.from("roadmaps").select("*").order("title");
+        const { data, error } = await supabase.from("roadmaps").select("*").order("title");
+        if (error) {
+          toast.error("Roadmaps Table Error: " + error.message);
+        }
         setRoadmaps(data ?? []);
         if (data && data.length > 0 && !selectedRoadmap) {
           setSelectedRoadmap(data[0]);
         }
       } else if (activeTab === "jobs") {
-        const { data } = await supabase.from("jobs").select("*").order("posted_at", { ascending: false });
+        const { data, error } = await supabase.from("jobs").select("*").order("posted_at", { ascending: false });
+        if (error) {
+          toast.error("Jobs Table Error: " + error.message);
+        }
         setJobs(data ?? []);
       } else if (activeTab === "community") {
-        const { data: postsRes } = await supabase.from("community_posts").select("*").order("created_at", { ascending: false });
+        const { data: postsRes, error: postsErr } = await supabase.from("community_posts").select("*").order("created_at", { ascending: false });
+        if (postsErr) {
+          toast.error("Forum Posts Error: " + postsErr.message);
+        }
         let fbData: any[] = [];
         try {
-          const { data } = await supabase.from("feedback" as any).select("*").order("created_at", { ascending: false });
-          fbData = data ?? [];
+          const { data, error: fbErr } = await supabase.from("feedback" as any).select("*").order("created_at", { ascending: false });
+          if (fbErr) {
+            toast.error("Feedback Table Error: " + fbErr.message + ". Make sure you have created the feedback table.");
+          } else {
+            fbData = data ?? [];
+          }
         } catch {
           try {
             fbData = JSON.parse(localStorage.getItem("myFeedback") ?? "[]").map((f: any, idx: number) => ({
@@ -347,7 +366,10 @@ function AdminPage() {
         setPosts((postsRes ?? []).map((p: any) => ({ ...p, authorName: pMap.get(p.user_id) ?? "Anonymous" })));
         setFeedbacks(fbData);
       } else if (activeTab === "projects") {
-        const { data } = await supabase.from("projects" as any).select("*").order("title");
+        const { data, error } = await supabase.from("projects" as any).select("*").order("title");
+        if (error) {
+          toast.error("Projects Table Error: " + error.message);
+        }
         const dbPrs = (data ?? []).map((p: any) => ({
           id: p.id,
           title: p.title,
@@ -362,7 +384,10 @@ function AdminPage() {
         } catch {}
         setProjectsList([...dbPrs, ...localPrs]);
       } else if (activeTab === "coding") {
-        const { data } = await supabase.from("coding_topics" as any).select("*").order("sort_order");
+        const { data, error } = await supabase.from("coding_topics" as any).select("*").order("sort_order");
+        if (error) {
+          toast.error("Coding Topics Table Error: " + error.message);
+        }
         setCodingTopics((data as any) ?? []);
       } else if (activeTab === "learn_notes") {
         try {
@@ -374,7 +399,8 @@ function AdminPage() {
           setQuizQuestions(JSON.parse(localStorage.getItem("customQuizBank") ?? "{}"));
         } catch {}
       }
-    } catch (e) {
+    } catch (e: any) {
+      toast.error("Error loading tab: " + (e?.message || String(e)));
       console.error(e);
     } finally {
       setLoadingList(false);

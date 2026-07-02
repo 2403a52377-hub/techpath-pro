@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User as SupabaseUser } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export type Year = "1st Year" | "2nd Year" | "3rd Year" | "4th Year" | "Graduate Student";
 export type Level = "Beginner" | "Intermediate" | "Advanced";
@@ -18,7 +19,8 @@ export type Domain =
   | "Mobile App Development"
   | "UI/UX Design"
   | "Software Testing"
-  | "Blockchain";
+  | "Blockchain"
+  | "Other";
 
 export interface Profile {
   id: string;
@@ -95,7 +97,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase.from("user_roles").select("role").eq("user_id", u.id).maybeSingle(),
     ]);
     const role = (roleRes.data?.role as "student" | "mentor" | "admin") ?? "student";
-    setUser(rowToProfile(profileRes.data, u, role));
+    const profile = profileRes.data;
+
+    let finalStreak = profile?.streak ?? 0;
+    let finalXp = profile?.xp ?? 0;
+    let didUpdate = false;
+
+    if (profile) {
+      const todayStr = new Date().toLocaleDateString('en-CA');
+      const storageKey = `last_active_date_${profile.id}`;
+      const lastDateStr = localStorage.getItem(storageKey);
+
+      if (!lastDateStr) {
+        finalStreak = Math.max(finalStreak, 1);
+        localStorage.setItem(storageKey, todayStr);
+        didUpdate = true;
+      } else if (lastDateStr !== todayStr) {
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toLocaleDateString('en-CA');
+
+        if (lastDateStr === yesterdayStr) {
+          finalStreak = finalStreak + 1;
+          finalXp = finalXp + 20;
+          toast.success(`Daily Streak Active! Day ${finalStreak} 🔥 (+20 XP)`);
+        } else {
+          finalStreak = 1;
+          toast.info("Streak reset to 1 day. Keep checking in daily!");
+        }
+        localStorage.setItem(storageKey, todayStr);
+        didUpdate = true;
+      }
+
+      if (didUpdate) {
+        await supabase
+          .from("profiles")
+          .update({ streak: finalStreak, xp: finalXp } as never)
+          .eq("id", profile.id);
+        profile.streak = finalStreak;
+        profile.xp = finalXp;
+      }
+    }
+
+    setUser(rowToProfile(profile, u, role));
   }
 
   useEffect(() => {
