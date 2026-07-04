@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth";
+import { cn } from "@/lib/utils";
 import {
   TrendingUp,
   Target,
@@ -11,6 +12,9 @@ import {
   Code2,
   Bot,
   Trophy,
+  CheckCircle2,
+  AlertCircle,
+  Lightbulb,
   ArrowRight,
   Loader2,
   Activity,
@@ -43,6 +47,7 @@ function Dashboard() {
   const { user, update } = useAuth();
   const [rows, setRows] = useState<ProgressRow[] | null>(null);
   const [resumeScore, setResumeScore] = useState<number | null>(null);
+  const [resumeData, setResumeData] = useState<any>(null);
   const [weekly, setWeekly] = useState<{ day: string; xp: number }[]>([]);
   const [photoModal, setPhotoModal] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -99,10 +104,11 @@ function Dashboard() {
       setRows(list);
       const { data: r } = await supabase
         .from("resumes")
-        .select("resume_score")
+        .select("resume_score, resume_data")
         .eq("user_id", user.id)
         .maybeSingle();
       setResumeScore(r?.resume_score ?? null);
+      setResumeData(r?.resume_data ?? null);
 
       // Weekly activity — XP earned per day for the last 7 days, derived from progress updates
       const today = new Date();
@@ -133,6 +139,57 @@ function Dashboard() {
     100,
     Math.round(avgProgress * 0.5 + (resumeScore ?? 0) * 0.3 + Math.min(user.xp ?? 0, 1000) / 20),
   );
+
+  const resumeChecks = [
+    {
+      label: "Professional Headline",
+      score: 10,
+      checked: resumeData ? (resumeData.headline?.length > 8) : false,
+      tip: "Add a clear job title or aspirational role (e.g. Frontend Engineer)."
+    },
+    {
+      label: "Professional Summary",
+      score: 15,
+      checked: resumeData ? (resumeData.summary?.length > 60) : false,
+      tip: "Write a short summary (at least 60 characters) highlighting your top skills."
+    },
+    {
+      label: "Core Skills (5+)",
+      score: 15,
+      checked: resumeData ? (resumeData.skills?.split(",").filter(Boolean).length >= 5) : false,
+      tip: "List at least 5 technical skills separated by commas."
+    },
+    {
+      label: "Education Details",
+      score: 10,
+      checked: resumeData ? (resumeData.educations?.length > 0 && resumeData.educations[0]?.degree?.length > 4) : false,
+      tip: "List your current degree and institution."
+    },
+    {
+      label: "Project Descriptions",
+      score: 20,
+      checked: resumeData ? (resumeData.projects?.length > 0 && resumeData.projects[0]?.description?.length > 30) : false,
+      tip: "Describe at least 1 project in detail (>30 chars) focusing on tech used and metrics."
+    },
+    {
+      label: "Work Experience",
+      score: 20,
+      checked: resumeData ? (resumeData.experiences?.length > 0 && resumeData.experiences[0]?.description?.length > 30) : false,
+      tip: "Describe internship or project role experiences (>30 chars)."
+    },
+    {
+      label: "Personal/GitHub Link",
+      score: 5,
+      checked: resumeData ? (resumeData.websiteUrl?.length > 5) : false,
+      tip: "Link to your GitHub profile or personal portfolio site."
+    },
+    {
+      label: "Achievements / Extras",
+      score: 5,
+      checked: resumeData ? (resumeData.extras?.length > 0) : false,
+      tip: "List certificates, achievements, or extra courses."
+    }
+  ];
 
   return (
     <AppShell>
@@ -204,6 +261,7 @@ function Dashboard() {
           value={`${avgProgress}%`}
           hint={rows ? `${rows.length} roadmaps active` : "—"}
           color="from-primary to-primary-glow"
+          to="/roadmaps"
         />
         <StatCard
           icon={Target}
@@ -211,6 +269,7 @@ function Dashboard() {
           value={`${placement}%`}
           hint="Based on progress + resume"
           color="from-secondary to-primary"
+          to="/placement"
         />
         <StatCard
           icon={Flame}
@@ -218,6 +277,7 @@ function Dashboard() {
           value={resumeScore !== null ? `${resumeScore}/100` : "—"}
           hint="Build to score"
           color="from-accent to-pink-500"
+          to="/resume"
         />
         <StatCard
           icon={Sparkles}
@@ -225,6 +285,7 @@ function Dashboard() {
           value={`${user.streak} days`}
           hint={`${user.xp} XP earned`}
           color="from-emerald-500 to-cyan-500"
+          to="/leaderboard"
         />
       </section>
 
@@ -279,11 +340,98 @@ function Dashboard() {
           </div>
         </div>
 
-        <div className="glass-card rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Zap className="size-5 text-accent" />
-            <h2 className="text-lg font-bold">Today's challenges</h2>
+        <div className="space-y-6">
+          {/* Resume Score Analysis Card */}
+          <div className="glass-card rounded-2xl p-6 relative overflow-hidden group">
+            {/* Ambient hover glow */}
+            <div className="absolute -inset-px bg-gradient-to-r from-accent/10 to-pink-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm pointer-events-none" />
+            
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Flame className="size-5 text-accent animate-pulse" />
+                  <h2 className="text-lg font-bold">Resume Analysis</h2>
+                </div>
+                <span className={cn(
+                  "text-[10px] px-2 py-0.5 rounded-full font-bold uppercase border",
+                  resumeScore === null 
+                    ? "bg-white/5 border-white/10 text-muted-foreground"
+                    : resumeScore >= 80 
+                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                    : resumeScore >= 50
+                    ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                    : "bg-red-500/10 border-red-500/20 text-red-400"
+                )}>
+                  {resumeScore !== null ? `${resumeScore}/100` : "Not Built"}
+                </span>
+              </div>
+
+              {/* Progress bar */}
+              <div className="mb-5">
+                <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
+                  <span>ATS Optimization Score</span>
+                  <span className="font-semibold text-foreground">{resumeScore ?? 0}%</span>
+                </div>
+                <div className="h-2 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-accent to-pink-500 transition-all duration-500"
+                    style={{ width: `${resumeScore ?? 0}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Checklist items */}
+              <div className="space-y-3 mb-5">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
+                  Details & Breakdown
+                </p>
+                <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1 select-none">
+                  {resumeChecks.map((item) => (
+                    <div key={item.label} className="text-xs">
+                      <div className="flex items-start gap-2">
+                        {item.checked ? (
+                          <CheckCircle2 className="size-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                        ) : (
+                          <AlertCircle className="size-3.5 text-muted-foreground/30 shrink-0 mt-0.5" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-center">
+                            <span className={item.checked ? "text-foreground font-medium" : "text-muted-foreground"}>
+                              {item.label}
+                            </span>
+                            <span className={item.checked ? "text-emerald-500 font-semibold" : "text-muted-foreground/50 text-[10px]"}>
+                              +{item.score} pts
+                            </span>
+                          </div>
+                          {!item.checked && (
+                            <div className="text-[10px] text-muted-foreground/75 mt-0.5 flex items-start gap-1">
+                              <Lightbulb className="size-3 text-accent shrink-0 mt-0.5" />
+                              <span>{item.tip}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <Button variant="hero" className="w-full gap-2 text-xs py-2 h-9" asChild>
+                <Link to="/resume">
+                  {resumeScore === null ? "Build Custom Resume" : "Optimize Resume Details"}
+                  <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+            </div>
           </div>
+
+          {/* Today's challenges */}
+          <div className="glass-card rounded-2xl p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Zap className="size-5 text-accent" />
+              <h2 className="text-lg font-bold">Today's challenges</h2>
+            </div>
           <ul className="space-y-3">
             {[
               { t: "Solve 2 DSA problems (Arrays)", xp: 30 },
@@ -303,6 +451,7 @@ function Dashboard() {
           </ul>
         </div>
       </div>
+    </div>
 
       <section className="glass-card rounded-2xl p-6 mt-8">
         <div className="flex items-center gap-2 mb-4">
@@ -447,15 +596,17 @@ function StatCard({
   value,
   hint,
   color,
+  to,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string;
   hint: string;
   color: string;
+  to?: string;
 }) {
-  return (
-    <div className="glass-card rounded-2xl p-5">
+  const content = (
+    <>
       <div
         className={`size-10 rounded-xl bg-gradient-to-br ${color} grid place-items-center mb-3 shadow-md`}
       >
@@ -464,8 +615,21 @@ function StatCard({
       <p className="text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
       <p className="text-2xl font-bold mt-1">{value}</p>
       <p className="text-xs text-muted-foreground mt-1">{hint}</p>
-    </div>
+    </>
   );
+
+  if (to) {
+    return (
+      <Link
+        to={to}
+        className="glass-card rounded-2xl p-5 block hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer select-none"
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return <div className="glass-card rounded-2xl p-5">{content}</div>;
 }
 
 function QuickCard({
