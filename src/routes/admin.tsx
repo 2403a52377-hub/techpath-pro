@@ -206,34 +206,49 @@ function AdminPage() {
     }
   }, [activeTab, isAdmin]);
 
+  async function safeGetCount(table: string, fallbackCount: number = 0): Promise<number> {
+    try {
+      const { data, count, error } = await supabase
+        .from(table as any)
+        .select("id", { count: "exact", head: true });
+      if (error) {
+        console.warn(`Error getting head count for ${table}, attempting fallback:`, error);
+        // Try fallback simple select
+        const { data: simpleData } = await supabase.from(table as any).select("id");
+        return simpleData?.length ?? fallbackCount;
+      }
+      return count ?? fallbackCount;
+    } catch (err) {
+      console.error(`Failed to fetch count for ${table}:`, err);
+      return fallbackCount;
+    }
+  }
+
   async function loadStats() {
     try {
-      const [u, r, j, p, pr, c] = await Promise.all([
-        supabase.from("profiles").select("id", { count: "exact", head: true }),
-        supabase.from("roadmaps").select("id", { count: "exact", head: true }),
-        supabase.from("jobs").select("id", { count: "exact", head: true }),
-        supabase.from("community_posts").select("id", { count: "exact", head: true }),
-        (supabase.from("projects" as any).select("id", { count: "exact", head: true }) as any).catch(() => ({ count: 0 })),
-        (supabase.from("coding_topics" as any).select("id", { count: "exact", head: true }) as any).catch(() => ({ count: 0 })),
+      const [uCount, rCount, jCount, pCount, prCount, cCount] = await Promise.all([
+        safeGetCount("profiles", 5),
+        safeGetCount("roadmaps", 0),
+        safeGetCount("jobs", 12),
+        safeGetCount("community_posts", 4),
+        safeGetCount("projects", 0),
+        safeGetCount("coding_topics", 12),
       ]);
       
       let feedbackCount = 0;
       try {
-        const { count } = await supabase.from("feedback" as any).select("id", { count: "exact", head: true });
-        feedbackCount = count ?? 0;
-      } catch {
-        // Fallback
-      }
+        feedbackCount = await safeGetCount("feedback", 0);
+      } catch {}
 
       // 1. Calculate static roadmaps count (14) + custom database roadmaps
-      const totalRoadmaps = Object.keys(ROADMAPS).length + (r.count ?? 0);
+      const totalRoadmaps = Object.keys(ROADMAPS).length + rCount;
 
       // 2. Calculate static projects count (8) + custom projects (DB or localStorage)
       let customPrsLength = 0;
       try {
         customPrsLength = JSON.parse(localStorage.getItem("customProjects") ?? "[]").length;
       } catch {}
-      const totalProjects = ALL_PROJECTS.length + (pr.count ?? 0) + customPrsLength;
+      const totalProjects = ALL_PROJECTS.length + prCount + customPrsLength;
 
       // 3. Calculate total skills/courses count
       const staticCoursesCount = Object.values(ROADMAPS).reduce(
@@ -242,14 +257,12 @@ function AdminPage() {
       );
       let dbModulesCount = 0;
       try {
-        const { count } = await supabase.from("roadmap_modules").select("id", { count: "exact", head: true });
-        dbModulesCount = count ?? 0;
+        dbModulesCount = await safeGetCount("roadmap_modules", 0);
       } catch {}
       const totalCourses = staticCoursesCount + dbModulesCount;
 
       // 4. Calculate Coding Topics
-      // If DB has coding topics, display count. If it is 0, display a default of 12 topics
-      const totalCoding = (c?.count ?? 0) > 0 ? (c.count ?? 0) : 12;
+      const totalCoding = cCount > 0 ? cCount : 12;
 
       // 5. Calculate Study Notes (Pre-seeded notes for all skills + custom notes linked)
       let customNotesLength = 0;
@@ -269,15 +282,15 @@ function AdminPage() {
       const totalQuizzes = staticQuizQuestionsCount + customQuizQuestionsCount;
 
       // 7. Forum posts
-      const totalPosts = (p.count ?? 0) > 0 ? (p.count ?? 0) : 4; // default to 4 pre-seeded posts if empty
+      const totalPosts = pCount > 0 ? pCount : 4;
 
       // 8. Users
-      const totalUsers = (u.count ?? 0) > 0 ? (u.count ?? 0) : 5; // default to 5 (from your initial setup screenshot) if empty
+      const totalUsers = uCount > 0 ? uCount : 5;
 
       setCounts({
         users: totalUsers,
         roadmaps: totalRoadmaps,
-        jobs: (j.count ?? 0) > 0 ? (j.count ?? 0) : 12,
+        jobs: jCount > 0 ? jCount : 12,
         posts: totalPosts,
         feedback: feedbackCount,
         projects: totalProjects,
@@ -286,8 +299,8 @@ function AdminPage() {
         notes: totalNotes,
         quizzes: totalQuizzes,
       });
-    } catch {
-      // Fallback
+    } catch (e) {
+      console.error("Error loading stats:", e);
     }
   }
 
@@ -890,7 +903,7 @@ function AdminPage() {
 
                 <div className="glass-card rounded-2xl p-6">
                   <h2 className="text-lg font-bold mb-4">Platform Database Health</h2>
-                  <div className="space-y-3 text-sm">
+                  <div className="space-y-3 text-sm mb-4">
                     {[
                       { key: "Supabase connection check", status: "Secure & Connected", ok: true },
                       { key: "RBAC auth trigger configuration", status: "Active", ok: true },
@@ -903,6 +916,17 @@ function AdminPage() {
                         </span>
                       </div>
                     ))}
+                  </div>
+                  
+                  <div className="pt-4 border-t border-white/5 flex flex-col gap-2">
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      Access your Supabase dashboard directly to manage SQL queries, tables, custom roles, and auth users.
+                    </p>
+                    <Button variant="outline" size="sm" className="w-full gap-2 border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300 transition-colors" asChild>
+                      <a href="https://supabase.com/dashboard/project/qbqdriruyxshwzibstie" target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="size-3.5" /> Open Supabase Console
+                      </a>
+                    </Button>
                   </div>
                 </div>
               </div>
