@@ -54,7 +54,7 @@ const MENTORS: Mentor[] = [
     rating: 4.9,
     reviews: 147,
     sessionsCompleted: 312,
-    price: "₹599/session",
+    price: "Free",
     availability: ["Weekends", "Weekday evenings"],
     linkedinUrl: "https://linkedin.com/in/",
     languages: ["English", "Hindi", "Malayalam"],
@@ -75,7 +75,7 @@ const MENTORS: Mentor[] = [
     rating: 4.8,
     reviews: 89,
     sessionsCompleted: 178,
-    price: "₹499/session",
+    price: "Free",
     availability: ["Saturday mornings", "Sunday all day"],
     linkedinUrl: "https://linkedin.com/in/",
     languages: ["English", "Tamil"],
@@ -96,7 +96,7 @@ const MENTORS: Mentor[] = [
     rating: 4.9,
     reviews: 203,
     sessionsCompleted: 445,
-    price: "₹699/session",
+    price: "Free",
     availability: ["Weekday evenings 8–10pm", "Sunday afternoons"],
     linkedinUrl: "https://linkedin.com/in/",
     languages: ["English", "Hindi"],
@@ -117,7 +117,7 @@ const MENTORS: Mentor[] = [
     rating: 4.7,
     reviews: 56,
     sessionsCompleted: 112,
-    price: "₹399/session",
+    price: "Free",
     availability: ["Weekends", "Friday evenings"],
     linkedinUrl: "https://linkedin.com/in/",
     languages: ["English", "Hindi", "Marathi"],
@@ -138,7 +138,7 @@ const MENTORS: Mentor[] = [
     rating: 4.8,
     reviews: 74,
     sessionsCompleted: 198,
-    price: "₹599/session",
+    price: "Free",
     availability: ["Weekday mornings", "Saturday all day"],
     linkedinUrl: "https://linkedin.com/in/",
     languages: ["English", "Tamil"],
@@ -159,7 +159,7 @@ const MENTORS: Mentor[] = [
     rating: 4.9,
     reviews: 91,
     sessionsCompleted: 167,
-    price: "₹449/session",
+    price: "Free",
     availability: ["Weekdays 7–9pm", "Saturday mornings"],
     linkedinUrl: "https://linkedin.com/in/",
     languages: ["English", "Hindi", "Gujarati"],
@@ -180,7 +180,7 @@ const MENTORS: Mentor[] = [
     rating: 5.0,
     reviews: 132,
     sessionsCompleted: 267,
-    price: "₹799/session",
+    price: "Free",
     availability: ["Weekdays 9–11pm", "Sunday mornings"],
     linkedinUrl: "https://linkedin.com/in/",
     languages: ["English", "Hindi", "Malayalam"],
@@ -201,7 +201,7 @@ const MENTORS: Mentor[] = [
     rating: 4.8,
     reviews: 48,
     sessionsCompleted: 89,
-    price: "₹299/session",
+    price: "Free",
     availability: ["Weekends all day", "Weekday evenings"],
     linkedinUrl: "https://linkedin.com/in/",
     languages: ["English", "Hindi"],
@@ -222,7 +222,7 @@ const MENTORS: Mentor[] = [
     rating: 4.7,
     reviews: 38,
     sessionsCompleted: 76,
-    price: "₹999/session",
+    price: "Free",
     availability: ["Saturday mornings only"],
     linkedinUrl: "https://linkedin.com/in/",
     languages: ["English", "Hindi"],
@@ -254,8 +254,8 @@ function BookingModal({ mentor, onClose }: { mentor: Mentor; onClose: () => void
       <div className="glass-card rounded-2xl border border-primary/30 w-full max-w-lg overflow-y-auto max-h-[90vh]">
         <div className="flex items-center justify-between p-5 border-b border-white/5">
           <div>
-            <h3 className="font-bold">Book Session with {mentor.name}</h3>
-            <p className="text-xs text-muted-foreground">{mentor.role} at {mentor.company} · {mentor.price}</p>
+            <h3 className="font-bold">Book Free Session with {mentor.name}</h3>
+            <p className="text-xs text-muted-foreground">{mentor.role} at {mentor.company} · <span className="text-emerald-400 font-semibold">100% Free</span></p>
           </div>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="size-5" /></button>
         </div>
@@ -347,8 +347,10 @@ function MentorCard({ mentor }: { mentor: Mentor }) {
               </div>
             </div>
             <div className="text-right shrink-0">
-              <p className="font-bold text-primary">{mentor.price}</p>
-              <p className="text-xs text-muted-foreground">{mentor.sessionsCompleted} sessions</p>
+              <span className="inline-block px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 text-xs font-bold">
+                🆓 FREE
+              </span>
+              <p className="text-xs text-muted-foreground mt-1">{mentor.sessionsCompleted} sessions</p>
             </div>
           </div>
 
@@ -362,7 +364,7 @@ function MentorCard({ mentor }: { mentor: Mentor }) {
           {/* Actions */}
           <div className="mt-4 flex gap-2">
             <Button variant="hero" className="flex-1" onClick={() => setBooking(true)}>
-              <Calendar className="size-4" /> Book Session
+              <Calendar className="size-4" /> Book Free Session
             </Button>
             <Button variant="outline" size="sm" onClick={() => setExpanded(!expanded)} className="gap-1">
               {expanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
@@ -437,17 +439,28 @@ function Mentors() {
   return (
     <AppShell>
       <PageHeader
-        title="Mentorship Platform"
-        subtitle="Book 1:1 sessions with industry professionals from Google, Amazon, Razorpay, and more."
+        title="Free Mentorship Platform"
+        subtitle="Book free 1:1 sessions with industry professionals from Google, Amazon, Razorpay, and more. 100% free — no payments ever."
       />
+
+      {/* Free mentorship banner */}
+      <div className="mt-5 glass-card rounded-2xl p-4 border border-emerald-500/25 bg-emerald-500/5 flex items-center gap-4">
+        <div className="size-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 grid place-items-center shrink-0">
+          <span className="text-2xl">🆓</span>
+        </div>
+        <div>
+          <p className="font-bold text-emerald-400">All Mentorships Are Completely Free</p>
+          <p className="text-xs text-muted-foreground mt-0.5">TechLand connects you directly with senior professionals who volunteer their time to help students grow. No session fees, no hidden charges.</p>
+        </div>
+      </div>
 
       {/* Stats */}
       <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Mentors", value: MENTORS.length },
-          { label: "Sessions Done", value: MENTORS.reduce((s, m) => s + m.sessionsCompleted, 0).toLocaleString() },
+          { label: "Expert Mentors", value: MENTORS.length },
+          { label: "Free Sessions Done", value: MENTORS.reduce((s, m) => s + m.sessionsCompleted, 0).toLocaleString() },
           { label: "Avg Rating", value: (MENTORS.reduce((s, m) => s + m.rating, 0) / MENTORS.length).toFixed(1) + " ★" },
-          { label: "Starting at", value: "₹299" },
+          { label: "Session Cost", value: "FREE ✅" },
         ].map((s) => (
           <div key={s.label} className="glass-card rounded-xl p-3 text-center">
             <p className="text-xl font-bold gradient-text">{s.value}</p>

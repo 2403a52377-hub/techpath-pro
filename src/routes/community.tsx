@@ -291,7 +291,7 @@ function Community() {
                 <p className="text-muted-foreground">No posts in this category yet. Start the conversation!</p>
               </div>
             )}
-            {filteredPosts.map((p) => <PostCard key={p.id} post={p} onLike={() => toggleLike(p)} />)}
+            {filteredPosts.map((p) => <PostCard key={p.id} post={p} onLike={() => toggleLike(p)} currentUserId={user?.id} />)}
           </div>
 
           {/* Sidebar */}
@@ -560,10 +560,68 @@ function Community() {
   );
 }
 
+/* ──────── REPLY TYPE ──── */
+type PostReply = {
+  id: string;
+  content: string;
+  authorInitial: string;
+  createdAt: string;
+};
+
 /* ──────── POST CARD ──── */
-function PostCard({ post, onLike }: { post: Post; onLike: () => void }) {
+function PostCard({ post, onLike, currentUserId }: { post: Post; onLike: () => void; currentUserId?: string }) {
   const [expanded, setExpanded] = useState(false);
+  const [showReplyForm, setShowReplyForm] = useState(false);
+  const [replyText, setReplyText] = useState("");
+  const [replies, setReplies] = useState<PostReply[]>([]);
+  const [replyBusy, setReplyBusy] = useState(false);
   const isLong = post.content.length > 200;
+
+  // Load replies from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(`replies_${post.id}`);
+      if (stored) setReplies(JSON.parse(stored));
+    } catch {
+      // ignore parse errors
+    }
+  }, [post.id]);
+
+  async function submitReply(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = replyText.trim();
+    if (!trimmed) return;
+    setReplyBusy(true);
+
+    const newReply: PostReply = {
+      id: crypto.randomUUID(),
+      content: trimmed,
+      authorInitial: currentUserId ? currentUserId.charAt(0).toUpperCase() : "U",
+      createdAt: new Date().toISOString(),
+    };
+
+    // Persist to localStorage first (always works)
+    const updated = [...replies, newReply];
+    localStorage.setItem(`replies_${post.id}`, JSON.stringify(updated));
+    setReplies(updated);
+
+    // Attempt Supabase insert — silently fall back if table doesn't exist
+    try {
+      await (supabase.from("post_replies" as any) as any).insert({
+        post_id: post.id,
+        user_id: currentUserId ?? null,
+        content: trimmed,
+        created_at: newReply.createdAt,
+      });
+    } catch {
+      // Table may not exist yet — localStorage is the source of truth
+    }
+
+    setReplyText("");
+    setShowReplyForm(false);
+    setReplyBusy(false);
+    toast.success("Reply posted! 💬");
+  }
 
   return (
     <div className="glass-card rounded-2xl p-5 border border-white/5 hover:border-primary/15 transition-all">
@@ -597,7 +655,60 @@ function PostCard({ post, onLike }: { post: Post; onLike: () => void }) {
               <Heart className={cn("size-3.5", post.liked_by_me && "fill-current")} />
               {post.likes_count ?? 0}
             </button>
+            {/* Reply button */}
+            <button
+              onClick={() => setShowReplyForm((v) => !v)}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+            >
+              <MessageSquare className="size-3.5" />
+              Reply{replies.length > 0 ? ` (${replies.length})` : ""}
+            </button>
           </div>
+
+          {/* Inline reply form */}
+          {showReplyForm && (
+            <form onSubmit={submitReply} className="mt-3 flex flex-col gap-2">
+              <textarea
+                rows={2}
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                placeholder="Write a reply…"
+                className="w-full bg-background/50 border border-white/10 rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:border-primary/50 transition-colors"
+              />
+              <div className="flex items-center gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={() => { setShowReplyForm(false); setReplyText(""); }}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+                >
+                  Cancel
+                </button>
+                <Button type="submit" size="sm" variant="hero" disabled={replyBusy || !replyText.trim()} className="h-7 text-xs gap-1.5">
+                  {replyBusy ? <Loader2 className="size-3 animate-spin" /> : <Send className="size-3" />}
+                  Send
+                </Button>
+              </div>
+            </form>
+          )}
+
+          {/* Replies list */}
+          {replies.length > 0 && (
+            <div className="mt-3 space-y-2 border-l-2 border-primary/20 pl-3">
+              {replies.map((r) => (
+                <div key={r.id} className="flex items-start gap-2">
+                  <div className="size-6 rounded-full bg-gradient-to-br from-accent/40 to-primary/40 grid place-items-center text-primary font-bold text-[10px] shrink-0">
+                    {r.authorInitial}
+                  </div>
+                  <div className="flex-1 bg-white/3 border border-white/5 rounded-xl px-3 py-2">
+                    <p className="text-xs text-foreground leading-relaxed">{r.content}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      {formatDistanceToNow(new Date(r.createdAt), { addSuffix: true })}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

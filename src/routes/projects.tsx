@@ -699,10 +699,79 @@ function ProjectCard({ p, defaultOpen }: { p: Project; defaultOpen?: boolean }) 
   );
 }
 
+/* ─────────────────────── ACTIVE PROJECTS DASHBOARD ──── */
+function ActiveProjectsDashboard({ allProjects }: { allProjects: Project[] }) {
+  const activeProjects = allProjects.filter((p) => {
+    try {
+      const key = `steps-${p.title}`;
+      const saved = JSON.parse(localStorage.getItem(key) ?? "null");
+      if (Array.isArray(saved)) {
+        const done = saved.filter(Boolean).length;
+        return done > 0 && done < p.steps.length;
+      }
+    } catch {}
+    return false;
+  });
+
+  if (activeProjects.length === 0) return null;
+
+  return (
+    <section className="mt-8 glass-card rounded-2xl p-6 border border-primary/20 bg-primary/3">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="size-8 rounded-xl bg-gradient-to-br from-primary to-accent grid place-items-center">
+          <Play className="size-4 text-white" />
+        </div>
+        <div>
+          <h2 className="font-bold">Your Active Projects</h2>
+          <p className="text-xs text-muted-foreground">Continue from where you left off</p>
+        </div>
+        <span className="ml-auto text-xs px-2.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 font-semibold">
+          {activeProjects.length} in progress
+        </span>
+      </div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {activeProjects.map((p) => {
+          const key = `steps-${p.title}`;
+          let done = 0;
+          try {
+            const saved = JSON.parse(localStorage.getItem(key) ?? "null");
+            if (Array.isArray(saved)) done = saved.filter(Boolean).length;
+          } catch {}
+          const pct = Math.round((done / p.steps.length) * 100);
+          const meta = LEVEL_COLORS[p.level];
+          const LevelIcon = meta.icon;
+          return (
+            <div key={p.title} className="glass-card rounded-xl p-4 border border-white/5 hover:border-primary/25 transition-all">
+              <div className="flex items-start gap-2 mb-3">
+                <div className={cn("size-7 rounded-lg grid place-items-center border shrink-0", meta.badge)}>
+                  <LevelIcon className="size-3.5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-sm truncate">{p.title}</p>
+                  <p className="text-[10px] text-muted-foreground">{done}/{p.steps.length} steps · {p.duration}</p>
+                </div>
+                <span className="text-xs font-bold text-primary shrink-0">{pct}%</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-primary to-accent transition-all"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 line-clamp-1">{p.steps[done] ?? "All steps done! 🎉"}</p>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 /* ─────────────────────── MAIN PAGE ──── */
 function Projects() {
   const levels = ["Beginner", "Intermediate", "Advanced"] as const;
   const [projectList, setProjectList] = useState<Project[]>(ALL_PROJECTS);
+  const tick = 0; // key for ActiveProjectsDashboard (static — re-renders with projectList changes)
 
   useEffect(() => {
     (async () => {
@@ -755,9 +824,23 @@ function Projects() {
   return (
     <AppShell>
       <PageHeader
-        title="Project Guidance"
-        subtitle="Expand any project for step-by-step guide, clickable docs, copyable code, and a live in-app code playground."
+        title="In-App Project Builder"
+        subtitle="Choose a project, follow the step-by-step guide, copy starter code, and build live in our in-app playground — no setup required."
       />
+
+      {/* Platform Banner */}
+      <div className="mt-5 glass-card rounded-2xl p-4 border border-accent/20 bg-accent/5 flex items-center gap-4">
+        <div className="size-12 rounded-2xl bg-gradient-to-br from-accent to-primary grid place-items-center shrink-0">
+          <Monitor className="size-6 text-white" />
+        </div>
+        <div className="flex-1">
+          <p className="font-bold text-accent">In-App Code Playground powered by StackBlitz</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Click any project → Open In-App Playground to write, run, and preview code live. No installs needed. Track your progress step-by-step.</p>
+        </div>
+      </div>
+
+      {/* Active Projects Dashboard */}
+      <ActiveProjectsDashboard allProjects={projectList} key={tick} />
 
       {/* Stats */}
       <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">

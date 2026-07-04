@@ -143,12 +143,101 @@ const PEER_ROOMS = [
 
 type ActiveTool = "ai-mock" | "voice" | "video" | "peer" | null;
 
+/* ─────────────────────── SCORE SUMMARY CARD ──── */
+function ScoreSummaryCard({ refreshKey: _refreshKey }: { refreshKey: number }) {
+  const scores: Record<string, number> = (() => {
+    try { return JSON.parse(localStorage.getItem('interview_category_scores') ?? '{}'); }
+    catch { return {}; }
+  })();
+
+  const categories = Object.keys(QUESTION_BANK); // ["Technical", "HR", "Behavioral"]
+  const attempted = categories.filter((c) => scores[c] !== undefined);
+  const overallAvg = attempted.length
+    ? parseFloat((attempted.reduce((sum, c) => sum + scores[c], 0) / attempted.length).toFixed(1))
+    : null;
+
+  function pillColor(s: number) {
+    if (s >= 7) return "bg-emerald-500/15 text-emerald-400 border-emerald-500/20";
+    if (s >= 4) return "bg-yellow-500/15 text-yellow-400 border-yellow-500/20";
+    return "bg-rose-500/15 text-rose-400 border-rose-500/20";
+  }
+
+  function catIcon(cat: string) {
+    if (cat === "Technical") return <Target className="size-3.5" />;
+    if (cat === "HR") return <Trophy className="size-3.5" />;
+    return <Star className="size-3.5" />;
+  }
+
+  return (
+    <section className="glass-card rounded-2xl p-5 mt-8">
+      <div className="flex items-center gap-2 mb-4">
+        <Trophy className="size-5 text-yellow-400" />
+        <h2 className="font-bold text-lg">Your Interview Scores</h2>
+        {overallAvg !== null && (
+          <span className={cn(
+            "ml-1 text-sm font-bold px-2.5 py-0.5 rounded-full border",
+            pillColor(overallAvg)
+          )}>
+            Overall&nbsp;{overallAvg}/10
+          </span>
+        )}
+        <span className="ml-auto text-xs text-muted-foreground">Saved from your last sessions</span>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        {categories.map((cat) => {
+          const s = scores[cat];
+          const hasScore = s !== undefined;
+          return (
+            <div
+              key={cat}
+              className="rounded-xl border bg-background/40 p-4 flex flex-col gap-1.5 transition-all hover:bg-white/3"
+              style={{ borderColor: hasScore ? undefined : 'rgba(255,255,255,0.05)' }}
+            >
+              <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
+                {catIcon(cat)}
+                {cat}
+              </div>
+              {hasScore ? (
+                <>
+                  <p className={cn(
+                    "text-2xl font-bold",
+                    s >= 7 ? "text-emerald-400" : s >= 4 ? "text-yellow-400" : "text-rose-400"
+                  )}>
+                    {s.toFixed(1)}<span className="text-sm font-normal text-muted-foreground">/10</span>
+                  </p>
+                  <span className={cn(
+                    "self-start text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                    pillColor(s)
+                  )}>
+                    {s >= 7 ? "Great" : s >= 4 ? "Needs Work" : "Keep Practicing"}
+                  </span>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground/60 italic">Not attempted</p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 /* ─────────────────────── MAIN PAGE ──── */
 function InterviewPrep() {
   const [activeTool, setActiveTool] = useState<ActiveTool>(null);
+  const [scoreRefresh, setScoreRefresh] = useState(0);
 
   function toggle(tool: ActiveTool) {
-    setActiveTool((prev) => (prev === tool ? null : tool));
+    setActiveTool((prev) => {
+      // if closing ai-mock, bump scoreRefresh so the card re-reads localStorage
+      if (prev === 'ai-mock' && tool === 'ai-mock') setScoreRefresh((k) => k + 1);
+      return prev === tool ? null : tool;
+    });
+  }
+
+  function handleMockComplete() {
+    setScoreRefresh((k) => k + 1);
   }
 
   return (
@@ -157,6 +246,9 @@ function InterviewPrep() {
         title="Interview Preparation"
         subtitle="Technical, HR, behavioral questions plus AI mock interview simulator — all right here."
       />
+
+      {/* ── Score Summary ── */}
+      <ScoreSummaryCard refreshKey={scoreRefresh} />
 
       {/* ── Tool Tiles ── */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
@@ -200,7 +292,7 @@ function InterviewPrep() {
       </div>
 
       {/* ── Inline Tool Panels ── */}
-      {activeTool === "ai-mock" && <AIMockPanel />}
+      {activeTool === "ai-mock" && <AIMockPanel onComplete={handleMockComplete} />}
       {activeTool === "voice" && <VoicePanel />}
       {activeTool === "video" && <VideoPanel />}
       {activeTool === "peer" && <PeerPanel />}
@@ -251,7 +343,7 @@ function ToolTile({
 }
 
 /* ─────────────────────── AI MOCK PANEL ──── */
-function AIMockPanel() {
+function AIMockPanel({ onComplete }: { onComplete?: () => void }) {
   const allQ = Object.entries(QUESTION_BANK).flatMap(([cat, qs]) =>
     qs.map((q) => ({ ...q, category: cat })),
   );
@@ -263,7 +355,7 @@ function AIMockPanel() {
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(120);
   const [timerOn, setTimerOn] = useState(false);
-  const [results, setResults] = useState<{ q: string; score: number }[]>([]);
+  const [results, setResults] = useState<{ q: string; score: number; category: string }[]>([]);
   const [done, setDone] = useState(false);
 
   useEffect(() => {
@@ -279,11 +371,50 @@ function AIMockPanel() {
     const words = answer.trim().split(/\s+/).filter(Boolean).length;
     const s = Math.min(10, Math.round((words / 60) * 10));
     setScore(s);
-    setResults((r) => [...r, { q: questions[idx].q, score: s }]);
+    setResults((r) => [...r, { q: questions[idx].q, score: s, category: questions[idx].category }]);
+  }
+
+  function saveCategoryScores(finalResults: { q: string; score: number; category: string }[]) {
+    // Group by category and compute per-category averages
+    const grouped: Record<string, number[]> = {};
+    for (const r of finalResults) {
+      if (!grouped[r.category]) grouped[r.category] = [];
+      grouped[r.category].push(r.score);
+    }
+    const avgByCategory: Record<string, number> = {};
+    for (const [c, scores] of Object.entries(grouped)) {
+      avgByCategory[c] = parseFloat((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1));
+    }
+    // Merge with existing saved scores (keep best per category)
+    try {
+      const existing: Record<string, number> = JSON.parse(
+        localStorage.getItem('interview_category_scores') ?? '{}'
+      );
+      const merged: Record<string, number> = { ...existing };
+      for (const [c, avg] of Object.entries(avgByCategory)) {
+        // overwrite with latest session score (or keep best: Math.max(existing[c] ?? 0, avg))
+        merged[c] = avg;
+      }
+      localStorage.setItem('interview_category_scores', JSON.stringify(merged));
+    } catch {
+      // ignore storage errors
+    }
+    onComplete?.();
   }
 
   function next() {
-    if (idx >= questions.length - 1) { setDone(true); return; }
+    if (idx >= questions.length - 1) {
+      setDone(true);
+      // finalResults includes the just-submitted answer already (from doSubmit's setResults)
+      // But setResults is async, so pass the up-to-date list directly
+      const finalResults = [...results];
+      // results state may not have the last entry yet; ensure current question is included
+      if (!finalResults.find((r) => r.q === questions[idx].q)) {
+        finalResults.push({ q: questions[idx].q, score, category: questions[idx].category });
+      }
+      saveCategoryScores(finalResults);
+      return;
+    }
     setIdx((i) => i + 1);
     setAnswer(""); setSubmitted(false); setScore(0); setTimeLeft(120); setTimerOn(false);
   }
