@@ -2,10 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader } from "./roadmaps.index";
 import { ROADMAPS } from "@/lib/data";
-import { Play, ExternalLink, FileText, BookOpen, X, Download, Maximize2 } from "lucide-react";
+import { Play, ExternalLink, FileText, BookOpen, X, Download, Maximize2, Loader2, Database } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/learn")({ component: LearnHub });
 
@@ -197,14 +199,58 @@ function LearnHub() {
   const [customCourseLinks, setCustomCourseLinks] = useState<Record<string, string>>({});
   const [customNotesLinks, setCustomNotesLinks] = useState<Record<string, string>>({});
   const [notesModal, setNotesModal] = useState<{ skill: string; url: string } | null>(null);
+  const [dbModules, setDbModules] = useState<{ title: string; youtube_url: string | null }[]>([]);
+  const [dbLoading, setDbLoading] = useState(false);
+
+  async function loadDbModules() {
+    setDbLoading(true);
+    try {
+      // Fetch all roadmap modules from Supabase and build a skill->youtube map
+      const { data, error } = await supabase
+        .from("roadmap_modules")
+        .select("title, youtube_url")
+        .not("youtube_url", "is", null);
+      if (!error && data) {
+        setDbModules(data);
+        // Build overrides map: skill name -> youtube url
+        const courseOverrides: Record<string, string> = {};
+        data.forEach((m: any) => {
+          if (m.youtube_url) courseOverrides[m.title] = m.youtube_url;
+        });
+        // Merge with localStorage custom links (localStorage wins for admin per-skill overrides)
+        try {
+          const localCourses = JSON.parse(localStorage.getItem("customCourseLinks") ?? "{}");
+          setCustomCourseLinks({ ...courseOverrides, ...localCourses });
+        } catch {
+          setCustomCourseLinks(courseOverrides);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load DB modules:", e);
+    } finally {
+      setDbLoading(false);
+    }
+  }
 
   useEffect(() => {
+    // Load localStorage custom notes links
     try {
-      const courses = JSON.parse(localStorage.getItem("customCourseLinks") ?? "{}");
       const notes = JSON.parse(localStorage.getItem("customNotesLinks") ?? "{}");
-      setCustomCourseLinks(courses);
       setCustomNotesLinks(notes);
     } catch {}
+    // Load from Supabase
+    loadDbModules();
+
+    // Real-time subscription: when admin adds/updates roadmap modules, refresh
+    const channel = supabase
+      .channel("learn-hub-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "roadmap_modules" }, () => {
+        loadDbModules();
+        toast.info("📚 Learning hub updated by admin!", { duration: 3000 });
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [active]);
 
   return (
@@ -236,7 +282,7 @@ function LearnHub() {
       </div>
 
       {/* Stats bar */}
-      <div className="mt-4 flex gap-4 flex-wrap">
+      <div className="mt-4 flex gap-4 flex-wrap items-center">
         {[
           { label: `${skills.length} Skills`, color: "text-primary" },
           { label: "YouTube Courses", color: "text-rose-400" },
@@ -247,6 +293,12 @@ function LearnHub() {
             • {s.label}
           </span>
         ))}
+        {dbLoading && <Loader2 className="size-3 animate-spin text-muted-foreground ml-2" />}
+        {dbModules.length > 0 && (
+          <span className="text-xs font-semibold text-blue-400 flex items-center gap-1">
+            <Database className="size-3" /> {dbModules.length} DB Modules Loaded
+          </span>
+        )}
       </div>
 
       <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">

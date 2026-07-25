@@ -4,14 +4,15 @@ import { PageHeader } from "./roadmaps.index";
 import {
   Star, Calendar, MapPin, Briefcase, Clock,
   ChevronDown, ChevronUp, CheckCircle2, User, Mail, Phone,
-  MessageSquare, Send, Linkedin, BadgeCheck, X, GraduationCap,
+  MessageSquare, Send, Linkedin, BadgeCheck, X, GraduationCap, Loader2,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/mentors")({ component: Mentors });
 
@@ -429,8 +430,67 @@ function MentorCard({ mentor }: { mentor: Mentor }) {
 function Mentors() {
   const [domainFilter, setDomainFilter] = useState("All");
   const [search, setSearch] = useState("");
+  const [dbMentors, setDbMentors] = useState<Mentor[] | null>(null);
+  const [loadingMentors, setLoadingMentors] = useState(true);
 
-  const filtered = MENTORS.filter((m) => {
+  async function loadMentors() {
+    try {
+      const { data, error } = await supabase
+        .from("mentors" as any)
+        .select("*")
+        .eq("is_active", true)
+        .order("rating", { ascending: false });
+      if (!error && data && data.length > 0) {
+        // Map DB fields to Mentor type
+        const mapped: Mentor[] = (data as any[]).map((m) => ({
+          id: m.id,
+          name: m.name,
+          avatar: (m.name ?? "?").charAt(0).toUpperCase(),
+          role: m.role,
+          company: m.company,
+          location: m.location ?? "India",
+          experience: m.experience ?? "—",
+          expertise: m.expertise ?? [],
+          domains: m.domains ?? [],
+          bio: m.bio ?? "",
+          education: m.education ?? "",
+          rating: m.rating ?? 4.5,
+          reviews: m.reviews ?? 0,
+          sessionsCompleted: m.sessions_completed ?? 0,
+          price: "Free",
+          availability: ["Weekends", "Weekday evenings"],
+          linkedinUrl: m.linkedin_url ?? "https://linkedin.com/in/",
+          languages: m.languages ?? ["English"],
+          achievements: m.achievements ?? [],
+        }));
+        setDbMentors(mapped);
+      } else {
+        // Fall back to static MENTORS if table empty
+        setDbMentors(MENTORS);
+      }
+    } catch {
+      setDbMentors(MENTORS);
+    } finally {
+      setLoadingMentors(false);
+    }
+  }
+
+  useEffect(() => {
+    loadMentors();
+    // Real-time subscription
+    const channel = supabase
+      .channel("mentors-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "mentors" }, () => {
+        loadMentors();
+        toast.info("Mentor list updated!", { duration: 2000 });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
+  const activeMentors = dbMentors ?? MENTORS;
+
+  const filtered = activeMentors.filter((m) => {
     const matchDomain = domainFilter === "All" || m.domains.some((d) => d.toLowerCase().includes(domainFilter.toLowerCase()));
     const matchSearch = !search || m.name.toLowerCase().includes(search.toLowerCase()) || m.expertise.some((e) => e.toLowerCase().includes(search.toLowerCase())) || m.company.toLowerCase().includes(search.toLowerCase());
     return matchDomain && matchSearch;
@@ -456,10 +516,14 @@ function Mentors() {
 
       {/* Stats */}
       <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: "Expert Mentors", value: MENTORS.length },
-          { label: "Free Sessions Done", value: MENTORS.reduce((s, m) => s + m.sessionsCompleted, 0).toLocaleString() },
-          { label: "Avg Rating", value: (MENTORS.reduce((s, m) => s + m.rating, 0) / MENTORS.length).toFixed(1) + " ★" },
+        {loadingMentors ? (
+          <div className="col-span-4 grid place-items-center py-4">
+            <Loader2 className="size-5 animate-spin text-primary" />
+          </div>
+        ) : [
+          { label: "Expert Mentors", value: activeMentors.length },
+          { label: "Free Sessions Done", value: activeMentors.reduce((s, m) => s + m.sessionsCompleted, 0).toLocaleString() },
+          { label: "Avg Rating", value: activeMentors.length ? (activeMentors.reduce((s, m) => s + m.rating, 0) / activeMentors.length).toFixed(1) + " ★" : "—" },
           { label: "Session Cost", value: "FREE ✅" },
         ].map((s) => (
           <div key={s.label} className="glass-card rounded-xl p-3 text-center">

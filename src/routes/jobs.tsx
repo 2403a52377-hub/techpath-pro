@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/jobs")({ component: JobsPage });
 
@@ -60,6 +61,11 @@ type Internship = {
   whoCanApply:string; responsibilities:string[];
 };
 type AppForm = { name:string; email:string; phone:string; coverLetter:string; resumeUrl:string };
+type DbJob = {
+  id: string; role: string; company_name: string; location: string;
+  job_type: string; experience: string | null; description: string | null;
+  application_link: string; posted_at: string;
+};
 
 /* ──────── INTERNSHIP DATA ──── */
 const INTERNSHIPS: Internship[] = [
@@ -293,9 +299,10 @@ function QuickApplyForm({ role, company, applyUrl, onDone }: {
 }
 
 /* ──────── MAIN PAGE ──── */
-type Tab = "internships" | "jobs";
+type Tab = "internships" | "db-jobs" | "jobs";
 
 function JobsPage() {
+  const { user } = useAuth();
   const [tab, setTab] = useState<Tab>("internships");
   const [jobs, setJobs] = useState<LiveJob[]>([]);
   const [loading, setLoading] = useState(false);
@@ -309,6 +316,9 @@ function JobsPage() {
     try { return new Set(JSON.parse(localStorage.getItem("savedJobs3") ?? "[]")); }
     catch { return new Set(); }
   });
+  const [dbJobs, setDbJobs] = useState<DbJob[]>([]);
+  const [dbJobsLoading, setDbJobsLoading] = useState(false);
+  const [savedDbJobIds, setSavedDbJobIds] = useState<Set<string>>(new Set());
 
   const loadJobs = useCallback(async () => {
     setLoading(true); setError(null);
@@ -327,8 +337,56 @@ function JobsPage() {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { if (tab === "jobs" && jobs.length === 0) loadJobs(); }, [tab]);
-  useEffect(() => { const id = setInterval(loadJobs, 30*60*1000); return () => clearInterval(id); }, []);
+  async function loadDbJobs() {
+    setDbJobsLoading(true);
+    try {
+      const { data } = await supabase
+        .from('jobs')
+        .select('*')
+        .order('posted_at', { ascending: false })
+        .limit(200);
+      setDbJobs(data ?? []);
+    } catch (e) {
+      console.error('Failed to load jobs from DB:', e);
+    } finally {
+      setDbJobsLoading(false);
+    }
+  }
+
+  async function loadSavedDbJobs() {
+    if (!user) return;
+    const { data } = await supabase.from('saved_jobs').select('job_id').eq('user_id', user.id);
+    setSavedDbJobIds(new Set((data ?? []).map((r: any) => r.job_id)));
+  }
+
+  async function toggleSaveDbJob(jobId: string) {
+    if (!user) { toast.error('Sign in to save jobs'); return; }
+    if (savedDbJobIds.has(jobId)) {
+      await supabase.from('saved_jobs').delete().eq('user_id', user.id).eq('job_id', jobId);
+      setSavedDbJobIds(prev => { const n = new Set(prev); n.delete(jobId); return n; });
+      toast.success('Job removed from saved');
+    } else {
+      await supabase.from('saved_jobs').insert({ user_id: user.id, job_id: jobId, status: 'saved' });
+      setSavedDbJobIds(prev => new Set([...prev, jobId]));
+      toast.success('Job saved! ✅');
+    }
+  }
+
+  useEffect(() => { if (tab === "jobs" && jobs.length === 0) loadJobs(); }, [tab, jobs.length, loadJobs]);
+  
+  useEffect(() => {
+    loadDbJobs();
+    loadSavedDbJobs();
+    const channel = supabase
+      .channel('jobs-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs' }, () => {
+        loadDbJobs();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.id]);
+
+  useEffect(() => { const id = setInterval(loadJobs, 30*60*1000); return () => clearInterval(id); }, [loadJobs]);
 
   function toggleSave(id: string) {
     setSaved((p) => { const n = new Set(p); n.has(id)?n.delete(id):n.add(id); localStorage.setItem("savedJobs3",JSON.stringify([...n])); return n; });
@@ -369,7 +427,7 @@ function JobsPage() {
 
       {/* Tab Switcher */}
       <div className="mt-5 flex gap-3">
-        {([["internships","Internships",GraduationCap,INTERNSHIPS.length],["jobs","Live Jobs",Briefcase,jobs.length]] as const).map(([val,label,Icon,count])=>(
+        {([["internships","Internships",GraduationCap,INTERNSHIPS.length],["db-jobs","Platform Jobs",BadgeCheck,dbJobs.length],["jobs","Live Jobs",Briefcase,jobs.length]] as const).map(([val,label,Icon,count])=>(
           <button key={val} onClick={() => { setTab(val as Tab); setDomain("All"); setQ(""); setExpandedId(null); setApplyingId(null); }}
             className={cn("flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm border transition-all",
               tab===val ? "bg-primary text-primary-foreground border-primary shadow-elegant" : "glass-card border-white/10 text-muted-foreground hover:text-foreground")}>
@@ -528,6 +586,67 @@ function JobsPage() {
               </a>
             </Button>
           </div>
+        </div>
+      )}
+
+      {/* ── PLATFORM JOBS ── */}
+      {tab === 'db-jobs' && (
+        <div className="mt-6">
+          {dbJobsLoading ? (
+            <div className="grid place-items-center py-16">
+              <Loader2 className="size-7 animate-spin text-primary mb-3" />
+              <p className="text-sm text-muted-foreground">Loading platform jobs…</p>
+            </div>
+          ) : dbJobs.length === 0 ? (
+            <div className="glass-card rounded-2xl p-12 text-center">
+              <Briefcase className="size-12 mx-auto text-muted-foreground opacity-30 mb-4" />
+              <h3 className="font-bold text-lg mb-2">No Jobs Added Yet</h3>
+              <p className="text-muted-foreground text-sm">Admins can add jobs from the Admin Panel. They'll appear here in real-time.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {dbJobs
+                .filter(j => 
+                  (!q || j.role.toLowerCase().includes(q.toLowerCase()) || j.company_name.toLowerCase().includes(q.toLowerCase()))
+                )
+                .map(job => (
+                  <div key={job.id} className="glass-card rounded-2xl p-5 border border-white/5 hover:border-primary/20 transition-all">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-bold text-base">{job.role}</h3>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">{job.job_type}</span>
+                        </div>
+                        <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground flex-wrap">
+                          <span className="flex items-center gap-1"><Building2 className="size-3.5" />{job.company_name}</span>
+                          <span className="flex items-center gap-1"><MapPin className="size-3.5" />{job.location}</span>
+                          {job.experience && <span className="flex items-center gap-1"><Briefcase className="size-3.5" />{job.experience}</span>}
+                          <span className="flex items-center gap-1"><Clock className="size-3.5" />{formatDistanceToNow(new Date(job.posted_at), { addSuffix: true })}</span>
+                        </div>
+                        {job.description && <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{job.description}</p>}
+                      </div>
+                      <div className="flex flex-col gap-2 shrink-0">
+                        <button
+                          onClick={() => toggleSaveDbJob(job.id)}
+                          className={cn("size-8 rounded-lg border grid place-items-center transition-colors",
+                            savedDbJobIds.has(job.id) ? "bg-primary/10 border-primary/30 text-primary" : "border-white/10 text-muted-foreground hover:text-primary hover:border-primary/20")}
+                        >
+                          {savedDbJobIds.has(job.id) ? <BookmarkCheck className="size-4" /> : <Bookmark className="size-4" />}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-4 flex gap-2">
+                      <Button variant="hero" size="sm" asChild>
+                        <a href={job.application_link} target="_blank" rel="noopener noreferrer" className="gap-1.5">
+                          Apply Now <ExternalLink className="size-3.5" />
+                        </a>
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
+          )}
         </div>
       )}
 

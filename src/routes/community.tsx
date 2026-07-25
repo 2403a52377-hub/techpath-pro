@@ -149,6 +149,19 @@ function Community() {
 
   useEffect(() => { loadPosts(); }, [user?.id]);
 
+  useEffect(() => {
+    const channel = supabase
+      .channel('community-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'community_posts' }, () => {
+        loadPosts();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'post_likes' }, () => {
+        loadPosts();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
   async function createPost(e: React.FormEvent) {
     e.preventDefault();
     if (!user) return toast.error("Sign in to post");
@@ -579,12 +592,31 @@ function PostCard({ post, onLike, currentUserId }: { post: Post; onLike: () => v
 
   // Load replies from localStorage on mount
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(`replies_${post.id}`);
-      if (stored) setReplies(JSON.parse(stored));
-    } catch {
-      // ignore parse errors
-    }
+    // Load from Supabase
+    supabase
+      .from('post_comments')
+      .select('id, content, user_id, created_at')
+      .eq('post_id', post.id)
+      .order('created_at', { ascending: true })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const supabaseReplies: PostReply[] = data.map((c: any) => ({
+            id: c.id,
+            content: c.content,
+            authorInitial: (c.user_id ?? 'U').charAt(0).toUpperCase(),
+            createdAt: c.created_at,
+          }));
+          setReplies(supabaseReplies);
+          // Also save to localStorage as cache
+          localStorage.setItem(`replies_${post.id}`, JSON.stringify(supabaseReplies));
+        } else {
+          // Fallback to localStorage
+          try {
+            const stored = localStorage.getItem(`replies_${post.id}`);
+            if (stored) setReplies(JSON.parse(stored));
+          } catch {}
+        }
+      });
   }, [post.id]);
 
   async function submitReply(e: React.FormEvent) {
@@ -607,12 +639,31 @@ function PostCard({ post, onLike, currentUserId }: { post: Post; onLike: () => v
 
     // Attempt Supabase insert — silently fall back if table doesn't exist
     try {
-      await (supabase.from("post_replies" as any) as any).insert({
+      await (supabase.from("post_comments" as any) as any).insert({
         post_id: post.id,
         user_id: currentUserId ?? null,
         content: trimmed,
         created_at: newReply.createdAt,
       });
+      
+      // Reload comments from supabase
+      supabase
+        .from('post_comments')
+        .select('id, content, user_id, created_at')
+        .eq('post_id', post.id)
+        .order('created_at', { ascending: true })
+        .then(({ data }) => {
+          if (data && data.length > 0) {
+            const supabaseReplies: PostReply[] = data.map((c: any) => ({
+              id: c.id,
+              content: c.content,
+              authorInitial: (c.user_id ?? 'U').charAt(0).toUpperCase(),
+              createdAt: c.created_at,
+            }));
+            setReplies(supabaseReplies);
+            localStorage.setItem(`replies_${post.id}`, JSON.stringify(supabaseReplies));
+          }
+        });
     } catch {
       // Table may not exist yet — localStorage is the source of truth
     }

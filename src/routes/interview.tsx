@@ -21,10 +21,14 @@ import {
   Sparkles,
   Trophy,
   Target,
+  Loader2,
+  Database,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/interview")({ component: InterviewPrep });
 
@@ -143,14 +147,37 @@ const PEER_ROOMS = [
 
 type ActiveTool = "ai-mock" | "voice" | "video" | "peer" | null;
 
+/* ─────────────────────── SUPABASE QUESTION LOADER ──── */
+type DbQuestion = { q: string; hint: string; sampleAnswer: string };
+type QuestionBank = Record<string, DbQuestion[]>;
+
+async function fetchDbQuestions(): Promise<QuestionBank | null> {
+  try {
+    const { data, error } = await supabase
+      .from("interview_questions" as any)
+      .select("category, question, hint, sample_answer")
+      .order("created_at", { ascending: true });
+    if (error || !data || data.length === 0) return null;
+    const bank: QuestionBank = {};
+    (data as any[]).forEach((row) => {
+      const cat = row.category as string;
+      if (!bank[cat]) bank[cat] = [];
+      bank[cat].push({ q: row.question, hint: row.hint ?? "", sampleAnswer: row.sample_answer ?? "" });
+    });
+    return Object.keys(bank).length > 0 ? bank : null;
+  } catch {
+    return null;
+  }
+}
+
 /* ─────────────────────── SCORE SUMMARY CARD ──── */
-function ScoreSummaryCard({ refreshKey: _refreshKey }: { refreshKey: number }) {
+function ScoreSummaryCard({ refreshKey: _refreshKey, questionBank }: { refreshKey: number; questionBank: QuestionBank }) {
   const scores: Record<string, number> = (() => {
     try { return JSON.parse(localStorage.getItem('interview_category_scores') ?? '{}'); }
     catch { return {}; }
   })();
 
-  const categories = Object.keys(QUESTION_BANK); // ["Technical", "HR", "Behavioral"]
+  const categories = Object.keys(questionBank); // ["Technical", "HR", "Behavioral"]
   const attempted = categories.filter((c) => scores[c] !== undefined);
   const overallAvg = attempted.length
     ? parseFloat((attempted.reduce((sum, c) => sum + scores[c], 0) / attempted.length).toFixed(1))
@@ -227,10 +254,27 @@ function ScoreSummaryCard({ refreshKey: _refreshKey }: { refreshKey: number }) {
 function InterviewPrep() {
   const [activeTool, setActiveTool] = useState<ActiveTool>(null);
   const [scoreRefresh, setScoreRefresh] = useState(0);
+  const [questionBank, setQuestionBank] = useState<QuestionBank>(QUESTION_BANK);
+  const [dbLoaded, setDbLoaded] = useState(false);
+
+  async function refreshQuestions() {
+    const db = await fetchDbQuestions();
+    if (db) { setQuestionBank(db); setDbLoaded(true); }
+  }
+
+  useEffect(() => {
+    refreshQuestions();
+    const channel = supabase
+      .channel("interview-questions-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "interview_questions" }, () => {
+        refreshQuestions();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   function toggle(tool: ActiveTool) {
     setActiveTool((prev) => {
-      // if closing ai-mock, bump scoreRefresh so the card re-reads localStorage
       if (prev === 'ai-mock' && tool === 'ai-mock') setScoreRefresh((k) => k + 1);
       return prev === tool ? null : tool;
     });
@@ -247,8 +291,14 @@ function InterviewPrep() {
         subtitle="Technical, HR, behavioral questions plus AI mock interview simulator — all right here."
       />
 
+      {dbLoaded && (
+        <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full">
+          <Database className="size-3" /> Questions loaded from database
+        </div>
+      )}
+
       {/* ── Score Summary ── */}
-      <ScoreSummaryCard refreshKey={scoreRefresh} />
+      <ScoreSummaryCard refreshKey={scoreRefresh} questionBank={questionBank} />
 
       {/* ── Tool Tiles ── */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
@@ -300,7 +350,7 @@ function InterviewPrep() {
       {/* ── Question Bank ── */}
       <div className="mt-10 space-y-6">
         <h2 className="text-xl font-bold">📚 Question Bank</h2>
-        {Object.entries(QUESTION_BANK).map(([cat, qs]) => (
+        {Object.entries(questionBank).map(([cat, qs]) => (
           <CategorySection key={cat} category={cat} questions={qs} />
         ))}
       </div>

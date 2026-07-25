@@ -7,8 +7,9 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { useEffect } from "react";
 
 export const Route = createFileRoute("/leaderboard")({ component: Leaderboard });
 
@@ -35,6 +36,17 @@ type Leader = {
 
 function Leaderboard() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('leaderboard-realtime')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['leaderboard'] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [queryClient]);
 
   /* Fetch all profiles ordered by XP from Supabase */
   const { data: leaders = [], isLoading } = useQuery<Leader[]>({
