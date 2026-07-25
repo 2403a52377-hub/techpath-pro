@@ -17,6 +17,9 @@ import {
   Plus,
   Trash2,
   ExternalLink,
+  FileText,
+  Upload,
+  Paperclip,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,6 +58,8 @@ type CertificationEntry = {
   issuer: string;
   date: string;
   link?: string;
+  pdfUrl?: string;
+  pdfFileName?: string;
 };
 
 type ExtraSection = {
@@ -507,6 +512,67 @@ function ResumeBuilder() {
                     <Input placeholder="https://..." value={cert.link || ""} onChange={(e) => updCert(cert.id, "link", e.target.value)} />
                   </Field>
                 </div>
+                
+                {/* PDF Certificate Upload / Submission */}
+                <div className="pt-2 border-t border-white/5 flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <Label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                      Certificate PDF Document (Optional)
+                    </Label>
+                    {cert.pdfUrl ? (
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 font-medium">
+                          <FileText className="size-3.5" />
+                          <span className="max-w-[180px] truncate">{cert.pdfFileName || "Certificate.pdf"}</span>
+                        </span>
+                        <a
+                          href={cert.pdfUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-primary hover:underline font-semibold"
+                        >
+                          View PDF
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            updCert(cert.id, "pdfUrl", "");
+                            updCert(cert.id, "pdfFileName", "");
+                            toast.success("Certificate PDF removed");
+                          }}
+                          className="text-rose-400 hover:text-rose-300 transition-colors ml-1"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/15 hover:bg-white/10 text-xs font-semibold text-foreground cursor-pointer transition-all">
+                        <Paperclip className="size-3.5 text-primary" />
+                        <span>Upload Certificate PDF</span>
+                        <input
+                          type="file"
+                          accept="application/pdf,image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            if (file.size > 5 * 1024 * 1024) {
+                              toast.error("PDF size must be less than 5MB");
+                              return;
+                            }
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                              updCert(cert.id, "pdfUrl", reader.result as string);
+                              updCert(cert.id, "pdfFileName", file.name);
+                              toast.success(`Attached "${file.name}" ✓`);
+                            };
+                            reader.readAsDataURL(file);
+                          }}
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -682,11 +748,18 @@ function ResumeBuilder() {
               <div key={cert.id} className="mt-2 flex items-center justify-between flex-wrap gap-1">
                 <div>
                   <p className="text-sm font-medium">{cert.name}{cert.issuer ? ` — ${cert.issuer}` : ""}</p>
-                  {cert.link && (
-                    <a href={cert.link} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1 mt-0.5">
-                      Verify Credential <ExternalLink className="size-3" />
-                    </a>
-                  )}
+                  <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+                    {cert.link && (
+                      <a href={cert.link} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                        Verify Credential <ExternalLink className="size-3" />
+                      </a>
+                    )}
+                    {cert.pdfUrl && (
+                      <a href={cert.pdfUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-emerald-400 hover:underline flex items-center gap-1 font-semibold">
+                        <FileText className="size-3" /> {cert.pdfFileName || "View Certificate PDF"}
+                      </a>
+                    )}
+                  </div>
                 </div>
                 {cert.date && <span className="text-xs text-muted-foreground">{cert.date}</span>}
               </div>
@@ -825,7 +898,7 @@ function ResumePdf({
             {data.certifications.map((cert) => (
               <View key={cert.id} style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
                 <Text style={pdfStyles.body}>
-                  {cert.name}{cert.issuer ? ` — ${cert.issuer}` : ""}{cert.link ? ` [ ${cert.link} ]` : ""}
+                  {cert.name}{cert.issuer ? ` — ${cert.issuer}` : ""}{cert.link ? ` [ ${cert.link} ]` : ""}{cert.pdfFileName ? ` [ PDF: ${cert.pdfFileName} ]` : ""}
                 </Text>
                 <Text style={pdfStyles.entryMeta}>{cert.date}</Text>
               </View>
