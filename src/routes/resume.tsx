@@ -49,6 +49,14 @@ type EducationEntry = {
   year: string;
 };
 
+type CertificationEntry = {
+  id: string;
+  name: string;
+  issuer: string;
+  date: string;
+  link?: string;
+};
+
 type ExtraSection = {
   id: string;
   title: string;
@@ -62,6 +70,7 @@ type ResumeData = {
   experiences: ExperienceEntry[];
   projects: ProjectEntry[];
   educations: EducationEntry[];
+  certifications: CertificationEntry[];
   websiteUrl: string;
   extras: ExtraSection[];
 };
@@ -102,6 +111,15 @@ const DEFAULT: ResumeData = {
       degree: "B.Tech, Computer Science",
       institution: "Your College Name",
       year: "Expected 2026",
+    },
+  ],
+  certifications: [
+    {
+      id: uid(),
+      name: "AWS Certified Cloud Practitioner",
+      issuer: "Amazon Web Services",
+      date: "2025",
+      link: "https://aws.amazon.com/",
     },
   ],
   websiteUrl: "",
@@ -201,8 +219,11 @@ function addProj(): ProjectEntry {
 function addEdu(): EducationEntry {
   return { id: uid(), degree: "", institution: "", year: "" };
 }
+function addCert(): CertificationEntry {
+  return { id: uid(), name: "", issuer: "", date: "", link: "" };
+}
 function addExtra(): ExtraSection {
-  return { id: uid(), title: "Achievements / Certifications", content: "" };
+  return { id: uid(), title: "Achievements / Honors", content: "" };
 }
 
 /* ─── Main Component ─── */
@@ -247,6 +268,7 @@ function ResumeBuilder() {
             (saved as any).education
               ? [{ ...addEdu(), degree: (saved as any).education ?? "" }]
               : DEFAULT.educations,
+          certifications: saved.certifications ?? DEFAULT.certifications,
           extras: saved.extras ?? [],
         });
       }
@@ -302,6 +324,12 @@ function ResumeBuilder() {
     setData((d) => ({
       ...d,
       educations: d.educations.map((e) => (e.id === id ? { ...e, [field]: val } : e)),
+    }));
+  }
+  function updCert(id: string, field: keyof CertificationEntry, val: string) {
+    setData((d) => ({
+      ...d,
+      certifications: d.certifications.map((c) => (c.id === id ? { ...c, [field]: val } : c)),
     }));
   }
   function updExtra(id: string, field: keyof ExtraSection, val: string) {
@@ -440,6 +468,45 @@ function ResumeBuilder() {
                 <Field label="Year / Expected">
                   <Input placeholder="Expected 2026 / 2022–2026" value={edu.year} onChange={(e) => updEdu(edu.id, "year", e.target.value)} />
                 </Field>
+              </div>
+            ))}
+          </div>
+
+          {/* Certifications */}
+          <div className="glass-card rounded-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold text-lg">Certifications & Licenses</h2>
+              <Button variant="outline" size="sm" onClick={() => setData((d) => ({ ...d, certifications: [...(d.certifications || []), addCert()] }))}>
+                <Plus className="size-3.5 mr-1" /> Add Certification
+              </Button>
+            </div>
+            {(!data.certifications || data.certifications.length === 0) && (
+              <p className="text-sm text-muted-foreground">Add certifications (e.g. AWS, Meta, Coursera, NPTEL, HackerRank)…</p>
+            )}
+            {(data.certifications || []).map((cert, idx) => (
+              <div key={cert.id} className="rounded-xl border border-white/10 bg-background/30 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-primary uppercase tracking-widest">Certification {idx + 1}</span>
+                  <button onClick={() => setData((d) => ({ ...d, certifications: d.certifications.filter((c) => c.id !== cert.id) }))} className="text-rose-400 hover:text-rose-300 transition-colors">
+                    <Trash2 className="size-4" />
+                  </button>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <Field label="Certification Name">
+                    <Input placeholder="AWS Certified Cloud Practitioner" value={cert.name} onChange={(e) => updCert(cert.id, "name", e.target.value)} />
+                  </Field>
+                  <Field label="Issuing Organization">
+                    <Input placeholder="Amazon Web Services / Coursera / Meta" value={cert.issuer} onChange={(e) => updCert(cert.id, "issuer", e.target.value)} />
+                  </Field>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <Field label="Year / Issue Date">
+                    <Input placeholder="2025" value={cert.date} onChange={(e) => updCert(cert.id, "date", e.target.value)} />
+                  </Field>
+                  <Field label="Credential URL / Link (Optional)">
+                    <Input placeholder="https://..." value={cert.link || ""} onChange={(e) => updCert(cert.id, "link", e.target.value)} />
+                  </Field>
+                </div>
               </div>
             ))}
           </div>
@@ -609,6 +676,24 @@ function ResumeBuilder() {
           </PreviewSection>
         )}
 
+        {data.certifications && data.certifications.some((c) => c.name) && (
+          <PreviewSection title="Certifications">
+            {data.certifications.map((cert) => (
+              <div key={cert.id} className="mt-2 flex items-center justify-between flex-wrap gap-1">
+                <div>
+                  <p className="text-sm font-medium">{cert.name}{cert.issuer ? ` — ${cert.issuer}` : ""}</p>
+                  {cert.link && (
+                    <a href={cert.link} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1 mt-0.5">
+                      Verify Credential <ExternalLink className="size-3" />
+                    </a>
+                  )}
+                </div>
+                {cert.date && <span className="text-xs text-muted-foreground">{cert.date}</span>}
+              </div>
+            ))}
+          </PreviewSection>
+        )}
+
         {data.extras.map((ex) => (
           ex.title && (
             <PreviewSection key={ex.id} title={ex.title}>
@@ -729,6 +814,20 @@ function ResumePdf({
                   {edu.degree}{edu.institution ? `, ${edu.institution}` : ""}
                 </Text>
                 <Text style={pdfStyles.entryMeta}>{edu.year}</Text>
+              </View>
+            ))}
+          </>
+        )}
+
+        {data.certifications && data.certifications.some((c) => c.name) && (
+          <>
+            <Text style={pdfStyles.h}>CERTIFICATIONS</Text>
+            {data.certifications.map((cert) => (
+              <View key={cert.id} style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
+                <Text style={pdfStyles.body}>
+                  {cert.name}{cert.issuer ? ` — ${cert.issuer}` : ""}{cert.link ? ` [ ${cert.link} ]` : ""}
+                </Text>
+                <Text style={pdfStyles.entryMeta}>{cert.date}</Text>
               </View>
             ))}
           </>
