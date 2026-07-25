@@ -259,8 +259,8 @@ function Dashboard() {
           icon={TrendingUp}
           label="Avg roadmap progress"
           value={`${avgProgress}%`}
-          hint={rows ? `${rows.length} roadmaps active` : "—"}
-          color="from-primary to-primary-glow"
+          hint={rows && rows.length > 0 ? `${rows.length} active roadmaps` : "Start a roadmap"}
+          color="from-blue-500 to-cyan-500"
           to="/roadmaps"
         />
         <StatCard
@@ -268,15 +268,15 @@ function Dashboard() {
           label="Placement readiness"
           value={`${placement}%`}
           hint="Based on progress + resume"
-          color="from-secondary to-primary"
+          color="from-violet-500 to-purple-500"
           to="/placement"
         />
         <StatCard
           icon={Flame}
           label="Resume score"
-          value={resumeScore !== null ? `${resumeScore}/100` : "—"}
-          hint="Build to score"
-          color="from-accent to-pink-500"
+          value={resumeScore !== null ? `${resumeScore}/100` : "Not Built"}
+          hint={resumeScore !== null ? "ATS-Ready Resume" : "Click to build ATS resume"}
+          color="from-amber-500 to-rose-500"
           to="/resume"
         />
         <StatCard
@@ -284,7 +284,7 @@ function Dashboard() {
           label="Learning streak"
           value={`${user.streak} days`}
           hint={`${user.xp} XP earned`}
-          color="from-emerald-500 to-cyan-500"
+          color="from-emerald-500 to-teal-500"
           to="/leaderboard"
         />
       </section>
@@ -293,7 +293,7 @@ function Dashboard() {
         <div className="lg:col-span-2 glass-card rounded-2xl p-6">
           <div className="flex items-start justify-between mb-6">
             <div>
-              <p className="text-xs uppercase tracking-widest text-accent font-semibold">
+              <p className="text-xs uppercase tracking-widest text-primary font-semibold">
                 Your roadmaps
               </p>
               <h2 className="text-2xl font-bold mt-1">Continue learning</h2>
@@ -310,11 +310,35 @@ function Dashboard() {
             </div>
           )}
           {rows && rows.length === 0 && (
-            <div className="text-center py-10">
-              <p className="text-muted-foreground">No roadmaps started yet.</p>
-              <Button variant="hero" className="mt-4" asChild>
-                <Link to="/roadmaps">Browse roadmaps</Link>
-              </Button>
+            <div className="rounded-xl border border-white/10 bg-background/30 p-6 space-y-4">
+              <div className="flex items-start gap-4">
+                <div className="size-12 rounded-xl bg-primary/10 border border-primary/20 grid place-items-center shrink-0">
+                  <BookOpen className="size-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-base">No active roadmaps yet</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Choose a structured learning path in Full Stack Development, DSA, DevOps, or Data Science to track your weekly progress and earn XP.
+                  </p>
+                </div>
+              </div>
+              <div className="grid sm:grid-cols-3 gap-3 pt-2">
+                {[
+                  { title: "Full-Stack Web Dev", slug: "full-stack-web-development", dur: "12 weeks" },
+                  { title: "DSA & Problem Solving", slug: "dsa-and-problem-solving", dur: "10 weeks" },
+                  { title: "DevOps & Cloud", slug: "devops-and-cloud-engineering", dur: "8 weeks" },
+                ].map((item) => (
+                  <Link
+                    key={item.slug}
+                    to="/roadmaps/$slug"
+                    params={{ slug: item.slug }}
+                    className="p-3 rounded-lg border border-white/10 bg-background/50 hover:border-primary/30 hover:bg-primary/5 transition-all text-xs space-y-1 block"
+                  >
+                    <p className="font-bold text-foreground truncate">{item.title}</p>
+                    <p className="text-muted-foreground">{item.dur} · Start now →</p>
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
           <div className="space-y-4">
@@ -323,11 +347,11 @@ function Dashboard() {
                 key={r.roadmap_id}
                 to="/roadmaps/$slug"
                 params={{ slug: r.roadmaps?.slug ?? "" }}
-                className="block p-4 rounded-lg bg-background/50 hover:bg-accent/10 transition-colors"
+                className="block p-4 rounded-xl border border-white/10 bg-background/50 hover:border-primary/30 hover:bg-accent/10 transition-all shadow-sm"
               >
                 <div className="flex justify-between text-sm mb-1.5">
                   <span className="font-semibold">{r.roadmaps?.title}</span>
-                  <span className="font-bold">{r.completion_percentage}%</span>
+                  <span className="font-bold text-primary">{r.completion_percentage}%</span>
                 </div>
                 <div className="h-2 rounded-full bg-muted overflow-hidden">
                   <div
@@ -606,23 +630,30 @@ function StatCard({
   to?: string;
 }) {
   const content = (
-    <>
-      <div
-        className={`size-10 rounded-xl bg-gradient-to-br ${color} grid place-items-center mb-3 shadow-md`}
-      >
-        <Icon className="size-5 text-white" />
+    <div className="relative overflow-hidden">
+      <div className="flex items-center justify-between mb-3">
+        <div
+          className={`size-11 rounded-xl bg-gradient-to-br ${color} grid place-items-center shadow-lg shadow-primary/10`}
+        >
+          <Icon className="size-5 text-white" />
+        </div>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
+          Metric
+        </span>
       </div>
-      <p className="text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
-      <p className="text-2xl font-bold mt-1">{value}</p>
-      <p className="text-xs text-muted-foreground mt-1">{hint}</p>
-    </>
+      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</p>
+      <p className="text-2xl lg:text-3xl font-extrabold mt-1 tracking-tight text-foreground">{value}</p>
+      <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1 font-medium">
+        <span>{hint}</span>
+      </p>
+    </div>
   );
 
   if (to) {
     return (
       <Link
         to={to}
-        className="glass-card rounded-2xl p-5 block hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer select-none"
+        className="glass-card rounded-2xl p-5 block hover:border-primary/40 hover:-translate-y-1 hover:shadow-elegant transition-all duration-300 cursor-pointer select-none group"
       >
         {content}
       </Link>
