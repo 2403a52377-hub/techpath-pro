@@ -103,6 +103,90 @@ export const QUIZ_BANK: Record<string, QuizQuestion[]> = {
       answer: 2,
       explanation: "Total = 60. New total = 40. Removed = 60 – 40 = 20.",
     },
+    {
+      q: "What is the compound interest on ₹10,000 for 2 years at 10% per annum compounded annually?",
+      options: ["₹2,000", "₹2,100", "₹2,200", "₹2,500"],
+      answer: 1,
+      explanation: "Amount = 10,000 × (1.1)² = ₹12,100. CI = 12,100 – 10,000 = ₹2,100.",
+    },
+    {
+      q: "A car covers 300 km in 5 hours. How much time will it take to cover 480 km at the same speed?",
+      options: ["6 hours", "7 hours", "8 hours", "9 hours"],
+      answer: 2,
+      explanation: "Speed = 300/5 = 60 km/h. Time = 480 / 60 = 8 hours.",
+    },
+    {
+      q: "Two pipes A and B can fill a tank in 20 min and 30 min respectively. How long if both operate together?",
+      options: ["10 min", "12 min", "15 min", "18 min"],
+      answer: 1,
+      explanation: "Rate = 1/20 + 1/30 = 5/60 = 1/12. Time = 12 minutes.",
+    },
+    {
+      q: "In how many ways can the letters of the word 'LEADER' be arranged?",
+      options: ["720", "360", "180", "120"],
+      answer: 1,
+      explanation: "6 letters with 'E' repeating twice = 6! / 2! = 720 / 2 = 360 ways.",
+    },
+    {
+      q: "If 12 men or 18 women can reap a field in 14 days, in how many days can 8 men and 16 women reap it?",
+      options: ["7 days", "9 days", "10 days", "12 days"],
+      answer: 1,
+      explanation: "12M = 18W → 1M = 1.5W. 8M + 16W = 28W. Time = (18 × 14) / 28 = 9 days.",
+    },
+    {
+      q: "The product of two numbers is 2028 and their HCF is 13. How many such pairs exist?",
+      options: ["1", "2", "3", "4"],
+      answer: 1,
+      explanation: "Let numbers be 13a and 13b. 13a × 13b = 2028 → ab = 12. Co-prime pairs (a,b): (1,12) and (3,4). Total = 2 pairs.",
+    },
+    {
+      q: "A bag contains 4 red and 6 blue balls. What is the probability of drawing 2 red balls together?",
+      options: ["2/15", "4/15", "1/5", "2/9"],
+      answer: 0,
+      explanation: "P = ⁴C₂ / ¹⁰C₂ = 6 / 45 = 2/15.",
+    },
+    {
+      q: "A person sells two chairs for ₹900 each, gaining 10% on one and losing 10% on the other. Overall result?",
+      options: ["No loss no gain", "1% loss", "1% gain", "2% loss"],
+      answer: 1,
+      explanation: "When selling price is same with same % gain/loss x, net result is always loss of (x/10)² % = (10/10)² % = 1% loss.",
+    },
+    {
+      q: "What is 45% of 280 + 28% of 450?",
+      options: ["242", "252", "262", "272"],
+      answer: 1,
+      explanation: "Note that a% of b = b% of a. So 45% of 280 + 28% of 450 = 2 × (45% of 280) = 2 × 126 = 252.",
+    },
+    {
+      q: "Present ages of X and Y are in ratio 4:5. After 5 years, ratio becomes 5:6. What is X's present age?",
+      options: ["15 years", "20 years", "25 years", "30 years"],
+      answer: 1,
+      explanation: "(4x+5)/(5x+5) = 5/6 → 24x + 30 = 25x + 25 → x = 5. X's age = 4 × 5 = 20 years.",
+    },
+    {
+      q: "Find the single discount equivalent to successive discounts of 20% and 10%.",
+      options: ["28%", "30%", "25%", "32%"],
+      answer: 0,
+      explanation: "Equivalent discount = 20 + 10 – (20×10)/100 = 30 – 2 = 28%.",
+    },
+    {
+      q: "A 200-liter mixture of milk and water contains 10% water. How much water must be added to make it 20% water?",
+      options: ["20 liters", "25 liters", "30 liters", "15 liters"],
+      answer: 1,
+      explanation: "Milk = 180L. New mixture total = 180 / 0.8 = 225L. Water to add = 225 – 200 = 25 liters.",
+    },
+    {
+      q: "The mean of 10 observations is 15. If each observation is multiplied by 3, what is the new mean?",
+      options: ["15", "30", "45", "60"],
+      answer: 2,
+      explanation: "Multiplying each observation by k multiplies the mean by k. New mean = 15 × 3 = 45.",
+    },
+    {
+      q: "In what ratio must tea at ₹60/kg be mixed with tea at ₹75/kg to get a mixture worth ₹65/kg?",
+      options: ["1:2", "2:1", "3:2", "2:3"],
+      answer: 1,
+      explanation: "By allegation: (75 – 65) : (65 – 60) = 10 : 5 = 2 : 1.",
+    },
   ],
   "Logical Reasoning": [
     {
@@ -169,6 +253,66 @@ export const QUIZ_BANK: Record<string, QuizQuestion[]> = {
       options: ["89", "98", "99", "109"],
       answer: 2,
       explanation: "Pattern: n = n concatenated twice. 9 = 99.",
+    },
+    {
+      q: "Find the odd one out: 3, 5, 7, 9, 11, 13",
+      options: ["3", "7", "9", "13"],
+      answer: 2,
+      explanation: "9 is a composite number (3×3), whereas all others are prime numbers.",
+    },
+    {
+      q: "If CLOCK is written as KCOLC, how is SYSTEM written?",
+      options: ["METSYS", "SYSMET", "METSSY", "SYSTEM"],
+      answer: 0,
+      explanation: "The word is simply reversed letter by letter. SYSTEM → METSYS.",
+    },
+    {
+      q: "Pointing to a photograph, Rohit said 'She is the daughter of my grandfather's only son.' How is Rohit related to the girl?",
+      options: ["Brother", "Uncle", "Cousin", "Father"],
+      answer: 0,
+      explanation: "Grandfather's only son = Rohit's father. Father's daughter = Rohit's sister. So Rohit is her brother.",
+    },
+    {
+      q: "A person walks 5 km North, turns right and walks 3 km, turns right and walks 5 km. How far is he from starting point?",
+      options: ["3 km", "5 km", "8 km", "0 km"],
+      answer: 0,
+      explanation: "5km North + 5km South cancel out. He is 3 km East from starting point.",
+    },
+    {
+      q: "In a class of 45 students, Riya is ranked 15th from the top. What is her rank from the bottom?",
+      options: ["30th", "31st", "32nd", "29th"],
+      answer: 1,
+      explanation: "Rank from bottom = (Total – Rank from top) + 1 = (45 – 15) + 1 = 31st.",
+    },
+    {
+      q: "Find the missing number in series: 7, 10, 8, 11, 9, 12, ?",
+      options: ["7", "10", "12", "13"],
+      answer: 1,
+      explanation: "Two alternating series: (7, 8, 9, 10) and (10, 11, 12). Next element belongs to first series → 10.",
+    },
+    {
+      q: "If '+' means '×', '–' means '÷', '×' means '–', and '÷' means '+', what is 15 – 3 + 4 × 6 ÷ 2?",
+      options: ["16", "18", "20", "22"],
+      answer: 0,
+      explanation: "Expression = 15 ÷ 3 × 4 – 6 + 2 = 5 × 4 – 6 + 2 = 20 – 6 + 2 = 16.",
+    },
+    {
+      q: "Statement: 'Some books are pens. All pens are pencils.' Conclusion: 'I. Some books are pencils.'",
+      options: ["Only I follows", "Only II follows", "Neither follows", "Both follow"],
+      answer: 0,
+      explanation: "Books overlapping with pens which are inside pencils means some books are definitely pencils.",
+    },
+    {
+      q: "If TODAY is written as UQEBZ, how is BEFORE written?",
+      options: ["CFGPSF", "CFGPRF", "CDGPSE", "CFHQSF"],
+      answer: 0,
+      explanation: "Pattern: +1, +1, +1, +1, +1 on each letter. B→C, E→F, F→G, O→P, R→S, E→F = CFGPSF.",
+    },
+    {
+      q: "Five friends A, B, C, D, E are sitting in a circle facing the center. A is right of B. E is between B and C. Who is left of B?",
+      options: ["A", "C", "D", "E"],
+      answer: 3,
+      explanation: "E is between B and C → E is adjacent to B. Since A is to the right of B, E must be to the left of B.",
     },
   ],
   "Verbal Ability": [
@@ -241,6 +385,188 @@ export const QUIZ_BANK: Record<string, QuizQuestion[]> = {
       options: ["Omnipotent", "Omniscient", "Omnivore", "Omnipresent"],
       answer: 1,
       explanation: "Omniscient = knowing everything. Omnipotent = all-powerful.",
+    },
+    {
+      q: "Choose the antonym of CANDID:",
+      options: ["Frank", "Outspoken", "Deceitful", "Honest"],
+      answer: 2,
+      explanation: "Candid = truthful and straightforward. Antonym = deceitful or secretive.",
+    },
+    {
+      q: "Fill in the blank: Neither the teacher nor the students __ present today.",
+      options: ["was", "were", "is", "has"],
+      answer: 1,
+      explanation: "When subjects are joined by 'neither... nor', the verb agrees with the subject closest to it ('students' → plural 'were').",
+    },
+    {
+      q: "What does the idiom 'Bite the bullet' mean?",
+      options: ["Eat quickly", "Face a difficult situation with courage", "Start a fight", "Shoot an arrow"],
+      answer: 1,
+      explanation: "'Bite the bullet' means to endure a painful or difficult situation with courage.",
+    },
+    {
+      q: "Choose the correct word: The news __ shocking to everyone.",
+      options: ["was", "were", "are", "have been"],
+      answer: 0,
+      explanation: "'News' is an uncountable singular noun, so singular verb 'was' is used.",
+    },
+    {
+      q: "Select the synonym of PRAGMATIC:",
+      options: ["Idealistic", "Practical", "Theoretical", "Fanciful"],
+      answer: 1,
+      explanation: "Pragmatic means dealing with things sensibly and realistically (practical).",
+    },
+    {
+      q: "Identify the correctly spelled word:",
+      options: ["Mischievous", "Mischievous", "Mischevious", "Mischivous"],
+      answer: 0,
+      explanation: "Correct spelling is Mischievous (m-i-s-c-h-i-e-v-o-u-s).",
+    },
+    {
+      q: "One who looks at the bright side of things is called a/an:",
+      options: ["Pessimist", "Optimist", "Atheist", "Altruist"],
+      answer: 1,
+      explanation: "Optimist = someone who expects the best outcome. Pessimist = expects worst.",
+    },
+    {
+      q: "Fill in the blank: I have been living in this city __ 2018.",
+      options: ["for", "since", "from", "in"],
+      answer: 1,
+      explanation: "Use 'since' with specific starting points of time in perfect continuous tenses.",
+    },
+    {
+      q: "What is the meaning of 'To burn the midnight oil'?",
+      options: ["Cause a fire", "Work or study late into the night", "Waste resources", "Sleep early"],
+      answer: 1,
+      explanation: "'Burn the midnight oil' means to study or work late into the night.",
+    },
+    {
+      q: "Choose the antonym of METICULOUS:",
+      options: ["Careful", "Careless", "Thorough", "Precise"],
+      answer: 1,
+      explanation: "Meticulous = showing great attention to detail. Antonym = careless.",
+    },
+  ],
+  "Technical & CS Fundamentals": [
+    {
+      q: "Which data structure operates on a First In, First Out (FIFO) basis?",
+      options: ["Stack", "Queue", "Tree", "Graph"],
+      answer: 1,
+      explanation: "Queue operates on FIFO principle (First In, First Out), whereas Stack is LIFO.",
+    },
+    {
+      q: "What is the time complexity of searching an element in a balanced Binary Search Tree (BST)?",
+      options: ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
+      answer: 1,
+      explanation: "Search time in a balanced BST (like AVL tree) is O(log n).",
+    },
+    {
+      q: "In Relational Database Management Systems (RDBMS), what does ACID stand for?",
+      options: [
+        "Atomicity, Consistency, Isolation, Durability",
+        "Accuracy, Control, Integration, Data",
+        "Availability, Concurrency, Indexing, Data",
+        "Algorithm, Computation, Input, Output",
+      ],
+      answer: 0,
+      explanation: "ACID guarantees database transaction reliability: Atomicity, Consistency, Isolation, Durability.",
+    },
+    {
+      q: "Which HTTP status code signifies 'Not Found'?",
+      options: ["200", "301", "404", "500"],
+      answer: 2,
+      explanation: "404 is the standard HTTP status code for resource Not Found.",
+    },
+    {
+      q: "Which layer of the OSI model handles routing and packet forwarding?",
+      options: ["Data Link Layer", "Network Layer", "Transport Layer", "Session Layer"],
+      answer: 1,
+      explanation: "Network Layer (Layer 3) handles IP addressing, packet forwarding, and routing.",
+    },
+    {
+      q: "What is deadlock in Operating Systems?",
+      options: [
+        "A situation where two or more processes are waiting infinitely for resources held by each other",
+        "When a process finishes execution",
+        "When memory is full",
+        "When CPU speed drops to 0",
+      ],
+      answer: 0,
+      explanation: "Deadlock occurs when processes are blocked forever because each holds a resource the other needs.",
+    },
+    {
+      q: "Which OOP concept allows a subclass to provide a specific implementation of a method defined in its superclass?",
+      options: ["Encapsulation", "Method Overloading", "Method Overriding", "Abstraction"],
+      answer: 2,
+      explanation: "Method Overriding allows runtime polymorphism by redefining superclass methods in subclasses.",
+    },
+    {
+      q: "What is the primary key in a relational database table?",
+      options: [
+        "A column that uniquely identifies each row and cannot be NULL",
+        "A key that references another table",
+        "A key used only for encryption",
+        "Any integer column",
+      ],
+      answer: 0,
+      explanation: "A primary key uniquely identifies every record in a table and cannot contain NULL values.",
+    },
+    {
+      q: "Which sorting algorithm has the best average-case time complexity of O(n log n)?",
+      options: ["Bubble Sort", "Merge Sort", "Insertion Sort", "Selection Sort"],
+      answer: 1,
+      explanation: "Merge Sort consistently guarantees O(n log n) time complexity in worst, average, and best cases.",
+    },
+    {
+      q: "What is the purpose of Git 'rebase' command?",
+      options: [
+        "To apply commits on top of another base tip",
+        "To delete a remote repository",
+        "To compile code",
+        "To revert a pull request",
+      ],
+      answer: 0,
+      explanation: "Git rebase moves or combines a sequence of commits to a new base commit, creating a linear history.",
+    },
+    {
+      q: "In networking, what protocol resolves domain names (e.g., google.com) to IP addresses?",
+      options: ["DHCP", "DNS", "FTP", "HTTP"],
+      answer: 1,
+      explanation: "DNS (Domain Name System) translates human-readable domain names into machine IP addresses.",
+    },
+    {
+      q: "Which of the following is a non-linear data structure?",
+      options: ["Array", "Linked List", "Queue", "Tree"],
+      answer: 3,
+      explanation: "Tree (and Graph) are non-linear data structures because elements are organized hierarchically.",
+    },
+    {
+      q: "What is virtual memory in Operating Systems?",
+      options: [
+        "A memory management technique that uses disk space to extend physical RAM",
+        "A physical RAM chip",
+        "GPU memory",
+        "Cache memory",
+      ],
+      answer: 0,
+      explanation: "Virtual memory creates an illusion of larger RAM by storing inactive memory pages on secondary disk storage.",
+    },
+    {
+      q: "Which index in SQL speeds up data retrieval?",
+      options: ["B-Tree Index", "Loop Index", "Static Index", "Virtual Index"],
+      answer: 0,
+      explanation: "B-Tree indexes are standard in relational databases (PostgreSQL, MySQL) for fast O(log n) lookups.",
+    },
+    {
+      q: "What is garbage collection in programming languages like Java or JavaScript?",
+      options: [
+        "Automatic memory management that deallocates memory occupied by unused objects",
+        "Deleting temporary files on disk",
+        "Closing database connections",
+        "Cleaning syntax errors",
+      ],
+      answer: 0,
+      explanation: "Garbage collection automatically reclaims heap memory used by unreachable objects.",
     },
   ],
 };
@@ -324,6 +650,31 @@ const TOP_RESOURCES = [
 
 type MockTestState = "select" | "running" | "results";
 
+function shuffleArray<T>(array: T[]): T[] {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function generateSessionQuestions(pool: QuizQuestion[], count: number = 10): QuizQuestion[] {
+  const shuffledPool = shuffleArray(pool);
+  const selectedSubset = shuffledPool.slice(0, Math.min(count, pool.length));
+  
+  return selectedSubset.map((q) => {
+    const correctAnswerText = q.options[q.answer];
+    const shuffledOptions = shuffleArray(q.options);
+    const newAnswerIndex = shuffledOptions.indexOf(correctAnswerText);
+    return {
+      ...q,
+      options: shuffledOptions,
+      answer: newAnswerIndex,
+    };
+  });
+}
+
 function MockTestModule({ onBack }: { onBack: () => void }) {
   const [state, setState] = useState<MockTestState>("select");
   const [selectedCategory, setSelectedCategory] = useState<string>("Quantitative Aptitude");
@@ -335,17 +686,6 @@ function MockTestModule({ onBack }: { onBack: () => void }) {
   
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [quizCategories, setQuizCategories] = useState<string[]>(Object.keys(QUIZ_BANK));
-
-  useEffect(() => {
-    try {
-      const baseQuestions = QUIZ_BANK[selectedCategory] ?? [];
-      const customQuizBank = JSON.parse(localStorage.getItem("customQuizBank") ?? "{}");
-      const customQuestions = customQuizBank[selectedCategory] ?? [];
-      setQuestions([...baseQuestions, ...customQuestions]);
-    } catch {
-      setQuestions(QUIZ_BANK[selectedCategory] ?? []);
-    }
-  }, [selectedCategory]);
 
   useEffect(() => {
     try {
@@ -374,10 +714,22 @@ function MockTestModule({ onBack }: { onBack: () => void }) {
   }, [state, timeLeft]);
 
   function startTest() {
+    let pool: QuizQuestion[] = [];
+    try {
+      const baseQuestions = QUIZ_BANK[selectedCategory] ?? [];
+      const customQuizBank = JSON.parse(localStorage.getItem("customQuizBank") ?? "{}");
+      const customQuestions = customQuizBank[selectedCategory] ?? [];
+      pool = [...baseQuestions, ...customQuestions];
+    } catch {
+      pool = QUIZ_BANK[selectedCategory] ?? [];
+    }
+
+    const sessionSet = generateSessionQuestions(pool, 10);
+    setQuestions(sessionSet);
     setQIndex(0);
     setSelected(null);
     setConfirmed(false);
-    setAnswers(new Array(questions.length).fill(null));
+    setAnswers(new Array(sessionSet.length).fill(null));
     setTimeLeft(600);
     setState("running");
   }
@@ -416,7 +768,7 @@ function MockTestModule({ onBack }: { onBack: () => void }) {
             <ChevronLeft className="size-4" /> Back to Placement Prep
           </button>
           <h1 className="text-2xl font-bold mb-2 flex items-center gap-2"><FileText className="size-6 text-orange-400" /> Mock Test</h1>
-          <p className="text-sm text-muted-foreground mb-6">10 questions · 10 minutes · Instant scoring & explanations</p>
+          <p className="text-sm text-muted-foreground mb-6">10 randomized questions per session · 10 minutes · Instant scoring & explanations</p>
 
           <div className="space-y-3 mb-6">
             {quizCategories.map((cat) => (
@@ -429,7 +781,7 @@ function MockTestModule({ onBack }: { onBack: () => void }) {
                 <div className={cn("size-4 rounded-full border-2 shrink-0", selectedCategory === cat ? "border-primary bg-primary" : "border-white/30")} />
                 <div>
                   <p className="font-bold">{cat}</p>
-                  <p className="text-xs text-muted-foreground">{getQuestionCount(cat)} questions · 10 min</p>
+                  <p className="text-xs text-muted-foreground">{getQuestionCount(cat)} questions in pool · 10 random/session · 10 min</p>
                 </div>
                 {selectedCategory === cat && <CheckCircle2 className="size-5 text-primary ml-auto" />}
               </button>
@@ -671,7 +1023,7 @@ function PlacementMain() {
           </div>
           <div>
             <p className="font-bold text-lg">📝 Take In-App Mock Test</p>
-            <p className="text-sm text-muted-foreground">10 questions · 10 mins · Instant results & explanations</p>
+            <p className="text-sm text-muted-foreground">10 randomized questions per session · 10 mins · Instant results & explanations</p>
           </div>
         </div>
         <div className="flex items-center gap-2 text-orange-400 font-semibold text-sm shrink-0">

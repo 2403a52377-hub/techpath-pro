@@ -38,7 +38,6 @@ const NAV = [
   { to: "/interview", label: "Interview Prep", icon: MessagesSquare },
   { to: "/jobs", label: "Jobs & Internships", icon: GraduationCap },
   { to: "/companies", label: "Company Tracks", icon: Building2 },
-  { to: "/assistant", label: "TechLand AI", icon: Bot },
   { to: "/community", label: "Community", icon: Users },
   { to: "/mentors", label: "Mentorship", icon: Sparkles },
   { to: "/leaderboard", label: "Leaderboard", icon: Trophy },
@@ -157,7 +156,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="text-sm font-semibold">{user.xp} XP</span>
           </div>
           <Button variant="outline" size="sm" asChild>
-            <Link to="/assistant">Ask TechLand AI</Link>
+            <Link to="/placement">Placement Prep</Link>
           </Button>
         </header>
         <main className="p-4 lg:p-8 max-w-7xl mx-auto">{children}</main>

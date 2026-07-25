@@ -10,7 +10,7 @@ import {
   Zap,
   BookOpen,
   Code2,
-  Bot,
+  Briefcase,
   Trophy,
   CheckCircle2,
   AlertCircle,
@@ -525,7 +525,7 @@ function Dashboard() {
             title="Coding Practice"
             desc="LeetCode, HackerRank tracks"
           />
-          <QuickCard to="/assistant" icon={Bot} title="TechLand AI" desc="24/7 career coach" />
+          <QuickCard to="/placement" icon={Briefcase} title="Placement Prep" desc="Aptitude & Mock Tests" />
           <QuickCard
             to="/leaderboard"
             icon={Trophy}

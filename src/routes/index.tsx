@@ -31,9 +31,9 @@ const FEATURES = [
     desc: "Curated DSA, company-tagged & contest problems on LeetCode, HackerRank & more.",
   },
   {
-    icon: Bot,
-    title: "TechLand AI",
-    desc: "Your 24/7 AI career coach — resume review, mock interviews, study plans.",
+    icon: Sparkles,
+    title: "Free Mentorship",
+    desc: "Connect for 1:1 sessions with engineers from Google, Amazon, Razorpay & more.",
   },
   {
     icon: FileText,
