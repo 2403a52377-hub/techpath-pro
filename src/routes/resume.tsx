@@ -16,6 +16,7 @@ import {
   Loader2,
   Plus,
   Trash2,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +39,7 @@ type ProjectEntry = {
   name: string;
   tech: string;
   description: string;
+  link?: string;
 };
 
 type EducationEntry = {
@@ -91,6 +93,7 @@ const DEFAULT: ResumeData = {
       tech: "React, Tailwind, Supabase",
       description:
         "Career platform for engineering students. Reduced page load by 40%. Onboarded 500+ users in first month.",
+      link: "https://github.com/username/techland",
     },
   ],
   educations: [
@@ -193,7 +196,7 @@ function addExp(): ExperienceEntry {
   return { id: uid(), role: "", company: "", period: "", description: "" };
 }
 function addProj(): ProjectEntry {
-  return { id: uid(), name: "", tech: "", description: "" };
+  return { id: uid(), name: "", tech: "", description: "", link: "" };
 }
 function addEdu(): EducationEntry {
   return { id: uid(), degree: "", institution: "", year: "" };
@@ -390,12 +393,15 @@ function ResumeBuilder() {
                     </button>
                   )}
                 </div>
-                <div className="grid sm:grid-cols-2 gap-3">
+                <div className="grid sm:grid-cols-3 gap-3">
                   <Field label="Project Name">
                     <Input placeholder="TechLand Platform" value={proj.name} onChange={(e) => updProj(proj.id, "name", e.target.value)} />
                   </Field>
                   <Field label="Tech Stack">
                     <Input placeholder="React, Node.js, Supabase" value={proj.tech} onChange={(e) => updProj(proj.id, "tech", e.target.value)} />
+                  </Field>
+                  <Field label="Project Link (GitHub/Live)">
+                    <Input placeholder="https://github.com/..." value={proj.link || ""} onChange={(e) => updProj(proj.id, "link" as any, e.target.value)} />
                   </Field>
                 </div>
                 <Field label="Description">
@@ -571,9 +577,16 @@ function ResumeBuilder() {
           <PreviewSection title="Projects">
             {data.projects.map((proj) => (
               <div key={proj.id} className="mt-3">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-bold text-sm">{proj.name}</p>
-                  {proj.tech && <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">{proj.tech}</span>}
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-bold text-sm">{proj.name}</p>
+                    {proj.tech && <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">{proj.tech}</span>}
+                  </div>
+                  {proj.link && (
+                    <a href={proj.link} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                      Link <ExternalLink className="size-3" />
+                    </a>
+                  )}
                 </div>
                 {proj.description && (
                   <p className="mt-1 text-sm">
@@ -699,7 +712,7 @@ function ResumePdf({
             {data.projects.map((proj) => (
               <View key={proj.id} style={{ marginBottom: 6 }}>
                 <Text style={pdfStyles.entryTitle}>
-                  {proj.name}{proj.tech ? ` — ${proj.tech}` : ""}
+                  {proj.name}{proj.tech ? ` — ${proj.tech}` : ""}{proj.link ? ` [ ${proj.link} ]` : ""}
                 </Text>
                 <Text style={pdfStyles.body}>{proj.description}</Text>
               </View>

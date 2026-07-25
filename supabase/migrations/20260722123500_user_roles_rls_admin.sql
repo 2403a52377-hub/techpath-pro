@@ -1,0 +1,18 @@
+-- Re-define has_role as SECURITY DEFINER to avoid RLS lookup recursion
+CREATE OR REPLACE FUNCTION public.has_role(_user_id UUID, _role public.app_role)
+RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = _user_id AND role = _role);
+$$;
+
+-- Add policies to user_roles to allow admins to manage it
+CREATE POLICY "Admins can select all user roles" ON public.user_roles
+  FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'admin'));
+
+CREATE POLICY "Admins can insert user roles" ON public.user_roles
+  FOR INSERT TO authenticated WITH CHECK (public.has_role(auth.uid(), 'admin'));
+
+CREATE POLICY "Admins can update user roles" ON public.user_roles
+  FOR UPDATE TO authenticated USING (public.has_role(auth.uid(), 'admin')) WITH CHECK (public.has_role(auth.uid(), 'admin'));
+
+CREATE POLICY "Admins can delete user roles" ON public.user_roles
+  FOR DELETE TO authenticated USING (public.has_role(auth.uid(), 'admin'));
