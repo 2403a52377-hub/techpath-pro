@@ -36,6 +36,8 @@ const NAV_GROUPS = [
     id: "learn",
     group: "Learn & Practice",
     icon: BookOpen,
+    groupBg: "bg-sky-500/8 border border-sky-500/15",
+    headerBg: "bg-sky-500/10 hover:bg-sky-500/15",
     items: [
       { to: "/roadmaps",  label: "Roadmaps",        icon: Map        },
       { to: "/learn",     label: "Learning Hub",     icon: BookOpen   },
@@ -47,6 +49,8 @@ const NAV_GROUPS = [
     id: "prep",
     group: "Preparation",
     icon: Target,
+    groupBg: "bg-indigo-500/8 border border-indigo-500/15",
+    headerBg: "bg-indigo-500/10 hover:bg-indigo-500/15",
     items: [
       { to: "/placement",  label: "Placement Prep",  icon: Target         },
       { to: "/interview",  label: "Interview Prep",  icon: MessagesSquare },
@@ -57,6 +61,8 @@ const NAV_GROUPS = [
     id: "explore",
     group: "Explore Opportunities",
     icon: GraduationCap,
+    groupBg: "bg-teal-500/8 border border-teal-500/15",
+    headerBg: "bg-teal-500/10 hover:bg-teal-500/15",
     items: [
       { to: "/jobs",      label: "Jobs & Internships", icon: GraduationCap },
       { to: "/companies", label: "Company Tracks",      icon: Building2     },
@@ -66,6 +72,8 @@ const NAV_GROUPS = [
     id: "grow",
     group: "Grow & Connect",
     icon: Users,
+    groupBg: "bg-violet-500/8 border border-violet-500/15",
+    headerBg: "bg-violet-500/10 hover:bg-violet-500/15",
     items: [
       { to: "/community",   label: "Community",   icon: Users    },
       { to: "/mentors",     label: "Mentorship",  icon: Sparkles },
@@ -101,15 +109,14 @@ function NavGroup({
   }, [hasActive]);
 
   return (
-    <div className="pt-1">
+    <div className={cn("rounded-xl overflow-hidden transition-all duration-200", group.groupBg)}>
       {/* Group header */}
       <button
         onClick={() => setExpanded((v) => !v)}
         className={cn(
           "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200",
-          expanded
-            ? "text-foreground bg-white/5"
-            : "text-muted-foreground hover:text-foreground hover:bg-white/5",
+          group.headerBg,
+          expanded ? "text-foreground" : "text-muted-foreground hover:text-foreground",
         )}
       >
         <GroupIcon className="size-[18px] shrink-0" />
@@ -135,7 +142,7 @@ function NavGroup({
           opacity: expanded ? 1 : 0,
         }}
       >
-        <div className="mt-1 ml-3 pl-4 border-l border-border/40 space-y-0.5 pb-1">
+        <div className="px-2 pb-2 pt-0.5 space-y-0.5">
           {group.items.map((item) => {
             const Icon = item.icon;
             const active =
@@ -151,7 +158,7 @@ function NavGroup({
                   "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] transition-all duration-150",
                   active
                     ? "bg-gradient-primary text-primary-foreground font-semibold shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-white/5 font-medium",
+                    : "text-muted-foreground hover:text-foreground hover:bg-white/10 font-medium",
                 )}
               >
                 <Icon className="size-[15px] shrink-0" />
@@ -234,14 +241,16 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
 
           {/* Collapsible groups */}
-          {NAV_GROUPS.map((group) => (
-            <NavGroup
-              key={group.id}
-              group={group}
-              pathname={pathname}
-              onNavigate={() => setOpen(false)}
-            />
-          ))}
+          <div className="space-y-2">
+            {NAV_GROUPS.map((group) => (
+              <NavGroup
+                key={group.id}
+                group={group}
+                pathname={pathname}
+                onNavigate={() => setOpen(false)}
+              />
+            ))}
+          </div>
 
           {/* Admin */}
           {isAdmin && (
