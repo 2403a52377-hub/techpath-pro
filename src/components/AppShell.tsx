@@ -36,8 +36,8 @@ const NAV_GROUPS = [
     id: "learn",
     group: "Learn & Practice",
     icon: BookOpen,
-    groupBg: "bg-sky-500/8 border border-sky-500/15",
-    headerBg: "bg-sky-500/10 hover:bg-sky-500/15",
+    groupBg: "bg-primary/8 border border-primary/15",
+    headerBg: "bg-primary/10 hover:bg-primary/15",
     items: [
       { to: "/roadmaps",  label: "Roadmaps",        icon: Map        },
       { to: "/learn",     label: "Learning Hub",     icon: BookOpen   },
@@ -49,8 +49,8 @@ const NAV_GROUPS = [
     id: "prep",
     group: "Preparation",
     icon: Target,
-    groupBg: "bg-indigo-500/8 border border-indigo-500/15",
-    headerBg: "bg-indigo-500/10 hover:bg-indigo-500/15",
+    groupBg: "bg-primary/8 border border-primary/15",
+    headerBg: "bg-primary/10 hover:bg-primary/15",
     items: [
       { to: "/placement",  label: "Placement Prep",  icon: Target         },
       { to: "/interview",  label: "Interview Prep",  icon: MessagesSquare },
@@ -61,8 +61,8 @@ const NAV_GROUPS = [
     id: "explore",
     group: "Explore Opportunities",
     icon: GraduationCap,
-    groupBg: "bg-teal-500/8 border border-teal-500/15",
-    headerBg: "bg-teal-500/10 hover:bg-teal-500/15",
+    groupBg: "bg-primary/8 border border-primary/15",
+    headerBg: "bg-primary/10 hover:bg-primary/15",
     items: [
       { to: "/jobs",      label: "Jobs & Internships", icon: GraduationCap },
       { to: "/companies", label: "Company Tracks",      icon: Building2     },
@@ -72,8 +72,8 @@ const NAV_GROUPS = [
     id: "grow",
     group: "Grow & Connect",
     icon: Users,
-    groupBg: "bg-violet-500/8 border border-violet-500/15",
-    headerBg: "bg-violet-500/10 hover:bg-violet-500/15",
+    groupBg: "bg-primary/8 border border-primary/15",
+    headerBg: "bg-primary/10 hover:bg-primary/15",
     items: [
       { to: "/community",   label: "Community",   icon: Users    },
       { to: "/mentors",     label: "Mentorship",  icon: Sparkles },
