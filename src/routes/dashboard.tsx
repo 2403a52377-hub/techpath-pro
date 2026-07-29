@@ -20,6 +20,14 @@ import {
   Activity,
   Camera,
   X,
+  Map,
+  FolderGit2,
+  MessagesSquare,
+  Building2,
+  Users,
+  ShieldCheck,
+  FileText,
+  GraduationCap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
@@ -534,28 +542,89 @@ function Dashboard() {
         </div>
       </section>
 
-      <section className="mt-8">
-        <h2 className="text-xl font-bold mb-4">Jump back in</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <QuickCard
-            to="/learn"
-            icon={BookOpen}
-            title="Learning Hub"
-            desc="Notes, tutorials & cheat sheets"
+      <section className="mt-8 space-y-6">
+        {/* ── Learn & Practice ── */}
+        <GroupSection
+          icon="📚"
+          title="Learn & Practice"
+          subtitle="Build strong fundamentals and improve your coding skills"
+          color="from-blue-500/20 to-cyan-500/10"
+          borderColor="border-blue-500/20"
+          iconBg="bg-blue-500"
+          items={[
+            { to: "/roadmaps", icon: Map, title: "Roadmaps", desc: "Step-by-step paths" },
+            { to: "/learn", icon: BookOpen, title: "Learning Hub", desc: "Notes, videos & more" },
+            { to: "/coding", icon: Code2, title: "Coding Practice", desc: "DSA, Problems & Contests" },
+            { to: "/projects", icon: FolderGit2, title: "Projects", desc: "Build and showcase" },
+          ]}
+        />
+
+        {/* ── Preparation ── */}
+        <GroupSection
+          icon="🎯"
+          title="Preparation"
+          subtitle="Prepare for placements and ace your interviews"
+          color="from-violet-500/20 to-purple-500/10"
+          borderColor="border-violet-500/20"
+          iconBg="bg-violet-500"
+          items={[
+            { to: "/placement", icon: Briefcase, title: "Placement Prep", desc: "Aptitude, Reasoning & Mock Tests" },
+            { to: "/interview", icon: MessagesSquare, title: "Interview Prep", desc: "Technical, HR & Mock Interviews" },
+            { to: "/resume", icon: FileText, title: "Resume Builder", desc: "ATS Friendly Resumes & Score Checker" },
+          ]}
+        />
+
+        {/* ── Explore Opportunities ── */}
+        <GroupSection
+          icon="🌟"
+          title="Explore Opportunities"
+          subtitle="Find the best jobs, internships and track company opportunities"
+          color="from-emerald-500/20 to-teal-500/10"
+          borderColor="border-emerald-500/20"
+          iconBg="bg-emerald-500"
+          items={[
+            { to: "/jobs", icon: GraduationCap, title: "Jobs & Internships", desc: "Discover latest jobs and internships" },
+            { to: "/companies", icon: Building2, title: "Company Tracks", desc: "Track companies and get placement insights" },
+          ]}
+        />
+
+        {/* ── Grow & Connect ── */}
+        <GroupSection
+          icon="🤝"
+          title="Grow & Connect"
+          subtitle="Connect with peers, mentors and grow together"
+          color="from-amber-500/20 to-orange-500/10"
+          borderColor="border-amber-500/20"
+          iconBg="bg-amber-500"
+          items={[
+            { to: "/community", icon: Users, title: "Community", desc: "Connect, discuss and collaborate" },
+            { to: "/mentors", icon: Sparkles, title: "Mentorship", desc: "Learn from mentors and industry experts" },
+            { to: "/leaderboard", icon: Trophy, title: "Leaderboard", desc: "Compete and climb the ranks" },
+          ]}
+        />
+
+        {/* ── Manage (admin only) ── */}
+        {user.role === "admin" && (
+          <GroupSection
+            icon="🛡️"
+            title="Manage"
+            subtitle="Admin tools and platform management"
+            color="from-rose-500/20 to-red-500/10"
+            borderColor="border-rose-500/20"
+            iconBg="bg-rose-500"
+            items={[
+              { to: "/admin", icon: ShieldCheck, title: "Admin", desc: "Manage users, content and platform settings" },
+            ]}
           />
-          <QuickCard
-            to="/coding"
-            icon={Code2}
-            title="Coding Practice"
-            desc="LeetCode, HackerRank tracks"
-          />
-          <QuickCard to="/placement" icon={Briefcase} title="Placement Prep" desc="Aptitude & Mock Tests" />
-          <QuickCard
-            to="/leaderboard"
-            icon={Trophy}
-            title="Leaderboard"
-            desc="Compete with peers"
-          />
+        )}
+
+        {/* Footer motivation bar */}
+        <div className="rounded-2xl border border-border/50 bg-gradient-to-r from-background/80 via-primary/5 to-background/80 px-6 py-4 flex items-center gap-3">
+          <TrendingUp className="size-5 text-primary shrink-0" />
+          <p className="text-sm text-muted-foreground">
+            <span className="font-semibold text-foreground">Success is built daily, not overnight.</span>{" "}
+            Keep learning, keep building! 🚀
+          </p>
         </div>
       </section>
 
@@ -685,5 +754,57 @@ function QuickCard({
       <p className="font-semibold">{title}</p>
       <p className="text-xs text-muted-foreground mt-1">{desc}</p>
     </Link>
+  );
+}
+
+function GroupSection({
+  icon,
+  title,
+  subtitle,
+  color,
+  borderColor,
+  iconBg,
+  items,
+}: {
+  icon: string;
+  title: string;
+  subtitle: string;
+  color: string;
+  borderColor: string;
+  iconBg: string;
+  items: { to: string; icon: React.ComponentType<{ className?: string }>; title: string; desc: string }[];
+}) {
+  return (
+    <div className={cn("rounded-2xl border bg-gradient-to-br p-5 sm:p-6", borderColor, color)}>
+      <div className="flex items-start gap-4 mb-5">
+        <div className={cn("size-12 rounded-2xl grid place-items-center shrink-0 shadow-lg text-xl", iconBg)}>
+          {icon}
+        </div>
+        <div>
+          <h2 className="text-lg font-bold tracking-tight">{title}</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {items.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.to}
+              to={item.to}
+              className="group flex flex-col items-center text-center gap-2 p-4 rounded-xl bg-background/60 hover:bg-background/90 border border-white/10 hover:border-primary/30 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200"
+            >
+              <div className="size-10 rounded-xl bg-white/10 group-hover:bg-primary/10 grid place-items-center transition-colors border border-white/10 group-hover:border-primary/20">
+                <Icon className="size-5 text-foreground/80 group-hover:text-primary transition-colors" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-foreground leading-tight">{item.title}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight line-clamp-2">{item.desc}</p>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
   );
 }
